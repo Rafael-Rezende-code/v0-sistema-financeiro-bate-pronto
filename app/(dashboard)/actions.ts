@@ -265,6 +265,51 @@ export async function addInventoryPurchase(
   revalidatePath("/")
 }
 
+export async function removeInventoryItem(
+  productType: ProductType,
+  quantity: number
+) {
+  const supabase = await createClient()
+
+  // Buscar estoque atual
+  const { data: current } = await supabase
+    .from("inventory")
+    .select("*")
+    .eq("product_type", productType)
+    .single()
+
+  if (current) {
+    const currentQty = current.quantity || 0
+    const avgCost = current.avg_cost || 0
+    
+    // Garantir que não fique negativo
+    const removeQty = Math.min(quantity, currentQty)
+    const newQty = Math.max(0, currentQty - removeQty)
+
+    if (removeQty > 0) {
+      await supabase
+        .from("inventory")
+        .update({
+          quantity: newQty,
+        })
+        .eq("product_type", productType)
+
+      // Registrar no fluxo de caixa como saída
+      const totalCostRemoved = removeQty * avgCost
+      await supabase.from("cashflow").insert({
+        type: "saida",
+        category: "ajuste_estoque",
+        description: `Retirada manual de estoque: ${removeQty} camisa(s) ${PRODUCT_CONFIG[productType].label}`,
+        amount: totalCostRemoved,
+      })
+    }
+  }
+
+  revalidatePath("/estoque")
+  revalidatePath("/caixa")
+  revalidatePath("/")
+}
+
 export async function getCashflow(startDate?: string, endDate?: string) {
   const supabase = await createClient()
 
