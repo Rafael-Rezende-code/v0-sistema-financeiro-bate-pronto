@@ -43,7 +43,7 @@ export async function getDashboardStats(
     }
   })
 
-  // Buscar fluxo de caixa para saldo
+  // Buscar fluxo de caixa para saldo (calculado EXCLUSIVAMENTE pela tabela cashflow)
   const { data: cashflowData } = await supabase
     .from("cashflow")
     .select("*")
@@ -56,8 +56,8 @@ export async function getDashboardStats(
     .filter(c => c.type === 'saida')
     .reduce((sum, c) => sum + Number(c.amount), 0)
   
-  // Adicionar receita das vendas ao saldo
-  const cashBalance = totalEntradas - totalSaidas + totalRevenue
+  // Saldo = entradas - saídas (vendas já estão incluídas como "entrada" no cashflow)
+  const cashBalance = totalEntradas - totalSaidas
 
   // Buscar retiradas
   const { data: withdrawalsData } = await supabase
