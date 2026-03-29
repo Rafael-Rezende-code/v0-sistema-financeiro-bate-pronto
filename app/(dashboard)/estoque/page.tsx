@@ -5,9 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { getInventory, addInventoryPurchase, removeInventoryItem } from "../actions"
+import { getInventory, addInventoryPurchase } from "../actions"
 import { PRODUCT_CONFIG, type ProductType, type Inventory } from "@/lib/types"
-import { Package, Plus, Minus, Shirt, Check } from "lucide-react"
+import { Package, Plus, Shirt, Check } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
   Dialog,
@@ -32,12 +32,6 @@ export default function EstoquePage() {
   const [totalCost, setTotalCost] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [dialogOpen, setDialogOpen] = useState(false)
-  
-  // Estados para retirada de estoque
-  const [removeDialogOpen, setRemoveDialogOpen] = useState(false)
-  const [removeSelectedProduct, setRemoveSelectedProduct] = useState<ProductType | null>(null)
-  const [removeQuantity, setRemoveQuantity] = useState("")
-  const [isRemoving, setIsRemoving] = useState(false)
 
   useEffect(() => {
     loadInventory()
@@ -71,35 +65,8 @@ export default function EstoquePage() {
     }
   }
 
-  const handleRemove = async () => {
-    if (!removeSelectedProduct || !removeQuantity) return
-    
-    setIsRemoving(true)
-    
-    try {
-      await removeInventoryItem(removeSelectedProduct, Number(removeQuantity))
-      await loadInventory()
-      setRemoveSelectedProduct(null)
-      setRemoveQuantity("")
-      setRemoveDialogOpen(false)
-    } catch (error) {
-      console.error("Erro ao retirar do estoque:", error)
-    } finally {
-      setIsRemoving(false)
-    }
-  }
-
   const unitCost = quantity && totalCost 
     ? Number(totalCost) / Number(quantity) 
-    : 0
-  
-  // Custo unitário para retirada
-  const removeUnitCost = removeSelectedProduct
-    ? inventory.find(i => i.product_type === removeSelectedProduct)?.avg_cost || PRODUCT_CONFIG[removeSelectedProduct].baseCost
-    : 0
-  const removeTotalCost = removeQuantity ? Number(removeQuantity) * removeUnitCost : 0
-  const maxRemoveQty = removeSelectedProduct
-    ? inventory.find(i => i.product_type === removeSelectedProduct)?.quantity || 0
     : 0
 
   return (
@@ -111,200 +78,94 @@ export default function EstoquePage() {
             Gerencie o estoque de camisas
           </p>
         </div>
-        <div className="flex gap-2">
-          <Dialog open={removeDialogOpen} onOpenChange={setRemoveDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline">
-                <Minus className="mr-2 h-4 w-4" />
-                Retirar do Estoque
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Retirar do Estoque</DialogTitle>
-                <DialogDescription>
-                  Remova camisas do estoque manualmente
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-6 py-4">
-                <div className="space-y-3">
-                  <Label>Tipo de Camisa</Label>
-                  <div className="grid gap-3 sm:grid-cols-3">
-                    {(Object.keys(PRODUCT_CONFIG) as ProductType[]).map((type) => {
-                      const config = PRODUCT_CONFIG[type]
-                      const isSelected = removeSelectedProduct === type
-                      const item = inventory.find(i => i.product_type === type)
-                      const qty = item?.quantity || 0
-                      
-                      return (
-                        <button
-                          key={type}
-                          onClick={() => {
-                            setRemoveSelectedProduct(type)
-                            setRemoveQuantity("")
-                          }}
-                          disabled={qty === 0}
-                          className={cn(
-                            "relative flex flex-col items-center rounded-lg border-2 p-4 transition-all",
-                            qty === 0 
-                              ? "cursor-not-allowed opacity-50 border-border" 
-                              : "hover:border-primary/50",
-                            isSelected
-                              ? "border-primary bg-primary/5"
-                              : "border-border"
-                          )}
-                        >
-                          {isSelected && (
-                            <div className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary">
-                              <Check className="h-3 w-3 text-primary-foreground" />
-                            </div>
-                          )}
-                          <Shirt className="h-5 w-5 text-primary mb-1" />
-                          <span className="text-sm font-medium">{config.label}</span>
-                          <span className="text-xs text-muted-foreground">({qty} un.)</span>
-                        </button>
-                      )
-                    })}
-                  </div>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Registrar Compra
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Registrar Compra de Estoque</DialogTitle>
+              <DialogDescription>
+                Adicione novas camisas ao estoque
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-6 py-4">
+              <div className="space-y-3">
+                <Label>Tipo de Camisa</Label>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {(Object.keys(PRODUCT_CONFIG) as ProductType[]).map((type) => {
+                    const config = PRODUCT_CONFIG[type]
+                    const isSelected = selectedProduct === type
+                    
+                    return (
+                      <button
+                        key={type}
+                        onClick={() => setSelectedProduct(type)}
+                        className={cn(
+                          "relative flex flex-col items-center rounded-lg border-2 p-4 transition-all hover:border-primary/50",
+                          isSelected
+                            ? "border-primary bg-primary/5"
+                            : "border-border"
+                        )}
+                      >
+                        {isSelected && (
+                          <div className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary">
+                            <Check className="h-3 w-3 text-primary-foreground" />
+                          </div>
+                        )}
+                        <Shirt className="h-5 w-5 text-primary mb-1" />
+                        <span className="text-sm font-medium">{config.label}</span>
+                      </button>
+                    )
+                  })}
                 </div>
+              </div>
 
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="remove-quantity">Quantidade a Retirar</Label>
+                  <Label htmlFor="quantity">Quantidade</Label>
                   <Input
-                    id="remove-quantity"
+                    id="quantity"
                     type="number"
-                    min="1"
-                    max={maxRemoveQty}
-                    placeholder={`Máx: ${maxRemoveQty}`}
-                    value={removeQuantity}
-                    onChange={(e) => {
-                      const val = Number(e.target.value)
-                      if (val <= maxRemoveQty) {
-                        setRemoveQuantity(e.target.value)
-                      }
-                    }}
+                    placeholder="Ex: 10"
+                    value={quantity}
+                    onChange={(e) => setQuantity(e.target.value)}
                   />
-                  {maxRemoveQty > 0 && (
-                    <p className="text-xs text-muted-foreground">
-                      Disponível para retirada: {maxRemoveQty} unidades
-                    </p>
-                  )}
                 </div>
-
-                {removeQuantity && removeTotalCost > 0 && (
-                  <div className="rounded-lg bg-destructive/10 p-4 space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Custo unitário:</span>
-                      <span className="font-medium">{formatCurrency(removeUnitCost)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Custo total (saída no caixa):</span>
-                      <span className="font-medium text-destructive">{formatCurrency(removeTotalCost)}</span>
-                    </div>
-                  </div>
-                )}
-
-                <Button
-                  onClick={handleRemove}
-                  disabled={!removeSelectedProduct || !removeQuantity || Number(removeQuantity) <= 0 || isRemoving}
-                  variant="destructive"
-                  className="w-full"
-                >
-                  {isRemoving ? "Retirando..." : "Confirmar Retirada"}
-                </Button>
+                <div className="space-y-2">
+                  <Label htmlFor="totalCost">Custo Total (R$)</Label>
+                  <Input
+                    id="totalCost"
+                    type="number"
+                    placeholder="Ex: 830"
+                    value={totalCost}
+                    onChange={(e) => setTotalCost(e.target.value)}
+                  />
+                </div>
               </div>
-            </DialogContent>
-          </Dialog>
-          
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Registrar Compra
+
+              {quantity && totalCost && (
+                <div className="rounded-lg bg-muted p-4">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Custo unitário:</span>
+                    <span className="font-medium">{formatCurrency(unitCost)}</span>
+                  </div>
+                </div>
+              )}
+
+              <Button
+                onClick={handleSubmit}
+                disabled={!selectedProduct || !quantity || !totalCost || isSubmitting}
+                className="w-full"
+              >
+                {isSubmitting ? "Registrando..." : "Registrar Compra"}
               </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Registrar Compra de Estoque</DialogTitle>
-                <DialogDescription>
-                  Adicione novas camisas ao estoque
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-6 py-4">
-                <div className="space-y-3">
-                  <Label>Tipo de Camisa</Label>
-                  <div className="grid gap-3 sm:grid-cols-3">
-                    {(Object.keys(PRODUCT_CONFIG) as ProductType[]).map((type) => {
-                      const config = PRODUCT_CONFIG[type]
-                      const isSelected = selectedProduct === type
-                      
-                      return (
-                        <button
-                          key={type}
-                          onClick={() => setSelectedProduct(type)}
-                          className={cn(
-                            "relative flex flex-col items-center rounded-lg border-2 p-4 transition-all hover:border-primary/50",
-                            isSelected
-                              ? "border-primary bg-primary/5"
-                              : "border-border"
-                          )}
-                        >
-                          {isSelected && (
-                            <div className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary">
-                              <Check className="h-3 w-3 text-primary-foreground" />
-                            </div>
-                          )}
-                          <Shirt className="h-5 w-5 text-primary mb-1" />
-                          <span className="text-sm font-medium">{config.label}</span>
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="quantity">Quantidade</Label>
-                    <Input
-                      id="quantity"
-                      type="number"
-                      placeholder="Ex: 10"
-                      value={quantity}
-                      onChange={(e) => setQuantity(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="totalCost">Custo Total (R$)</Label>
-                    <Input
-                      id="totalCost"
-                      type="number"
-                      placeholder="Ex: 830"
-                      value={totalCost}
-                      onChange={(e) => setTotalCost(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                {quantity && totalCost && (
-                  <div className="rounded-lg bg-muted p-4">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Custo unitário:</span>
-                      <span className="font-medium">{formatCurrency(unitCost)}</span>
-                    </div>
-                  </div>
-                )}
-
-                <Button
-                  onClick={handleSubmit}
-                  disabled={!selectedProduct || !quantity || !totalCost || isSubmitting}
-                  className="w-full"
-                >
-                  {isSubmitting ? "Registrando..." : "Registrar Compra"}
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
