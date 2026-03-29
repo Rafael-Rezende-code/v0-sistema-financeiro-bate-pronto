@@ -219,6 +219,30 @@ export async function updateInventory(productType: ProductType, quantity: number
   revalidatePath("/estoque")
 }
 
+// Ajuste simples de quantidade (sem afetar cashflow ou custo médio)
+export async function adjustInventoryQuantity(
+  productType: ProductType,
+  delta: number // +1 ou -1
+) {
+  const supabase = await createClient()
+
+  const { data: current } = await supabase
+    .from("inventory")
+    .select("quantity")
+    .eq("product_type", productType)
+    .single()
+
+  const currentQty = current?.quantity || 0
+  const newQty = Math.max(0, currentQty + delta)
+
+  await supabase
+    .from("inventory")
+    .update({ quantity: newQty })
+    .eq("product_type", productType)
+
+  revalidatePath("/estoque")
+}
+
 export async function addInventoryPurchase(
   productType: ProductType,
   quantity: number,

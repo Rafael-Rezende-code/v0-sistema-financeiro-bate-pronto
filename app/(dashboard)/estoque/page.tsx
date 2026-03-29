@@ -5,9 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { getInventory, addInventoryPurchase } from "../actions"
+import { getInventory, addInventoryPurchase, adjustInventoryQuantity } from "../actions"
 import { PRODUCT_CONFIG, type ProductType, type Inventory } from "@/lib/types"
-import { Package, Plus, Shirt, Check } from "lucide-react"
+import { Package, Plus, Minus, Shirt, Check } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
   Dialog,
@@ -197,14 +197,39 @@ export default function EstoquePage() {
                       <Package className="h-5 w-5 text-muted-foreground" />
                       <span className="text-muted-foreground">Quantidade</span>
                     </div>
-                    <span className={cn(
-                      "text-2xl font-bold",
-                      qty === 0 && "text-destructive",
-                      qty > 0 && qty <= 5 && "text-yellow-600",
-                      qty > 5 && "text-green-600"
-                    )}>
-                      {qty}
-                    </span>
+                    <div className="flex items-center gap-3">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8"
+                        disabled={qty === 0}
+                        onClick={async () => {
+                          await adjustInventoryQuantity(type, -1)
+                          await loadInventory()
+                        }}
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                      <span className={cn(
+                        "text-2xl font-bold min-w-[3ch] text-center",
+                        qty === 0 && "text-destructive",
+                        qty > 0 && qty <= 5 && "text-yellow-600",
+                        qty > 5 && "text-green-600"
+                      )}>
+                        {qty}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={async () => {
+                          await adjustInventoryQuantity(type, 1)
+                          await loadInventory()
+                        }}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-3 text-sm">
