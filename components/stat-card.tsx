@@ -7,10 +7,6 @@ interface StatCardProps {
   value: string
   description?: string
   icon: LucideIcon
-  trend?: {
-    value: number
-    isPositive: boolean
-  }
   variant?: "default" | "primary" | "success" | "warning"
 }
 
@@ -19,50 +15,53 @@ export function StatCard({
   value,
   description,
   icon: Icon,
-  trend,
   variant = "default",
 }: StatCardProps) {
   return (
     <Card className={cn(
       "relative overflow-hidden",
       variant === "primary" && "bg-primary text-primary-foreground",
-      variant === "success" && "bg-success text-success-foreground",
+      variant === "success" && "bg-green-50 border-green-200",
     )}>
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
+      <CardContent className="p-3 md:p-6">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0 flex-1 space-y-0.5 md:space-y-1">
             <p className={cn(
-              "text-sm font-medium",
-              variant === "default" ? "text-muted-foreground" : "opacity-80"
+              "text-[11px] md:text-sm font-medium truncate",
+              variant === "default" && "text-muted-foreground",
+              variant === "primary" && "opacity-80",
+              variant === "success" && "text-green-700",
             )}>
               {title}
             </p>
-            <p className="text-2xl font-bold tracking-tight">{value}</p>
+            <p className={cn(
+              "text-base md:text-2xl font-bold tracking-tight truncate",
+              variant === "success" && "text-green-700",
+            )}>
+              {value}
+            </p>
             {description && (
               <p className={cn(
-                "text-xs",
-                variant === "default" ? "text-muted-foreground" : "opacity-70"
+                "text-[10px] md:text-xs truncate",
+                variant === "default" && "text-muted-foreground",
+                variant === "primary" && "opacity-70",
+                variant === "success" && "text-green-600",
               )}>
                 {description}
               </p>
             )}
-            {trend && (
-              <p className={cn(
-                "text-xs font-medium",
-                trend.isPositive ? "text-green-600" : "text-red-600",
-                variant !== "default" && (trend.isPositive ? "text-green-200" : "text-red-200")
-              )}>
-                {trend.isPositive ? "+" : ""}{trend.value}% vs período anterior
-              </p>
-            )}
           </div>
           <div className={cn(
-            "rounded-lg p-2.5",
-            variant === "default" ? "bg-primary/10" : "bg-white/20"
+            "rounded-lg p-1.5 md:p-2.5 shrink-0",
+            variant === "default" && "bg-primary/10",
+            variant === "primary" && "bg-white/20",
+            variant === "success" && "bg-green-100",
           )}>
             <Icon className={cn(
-              "h-5 w-5",
-              variant === "default" ? "text-primary" : "text-current"
+              "h-4 w-4 md:h-5 md:w-5",
+              variant === "default" && "text-primary",
+              variant === "primary" && "text-current",
+              variant === "success" && "text-green-600",
             )} />
           </div>
         </div>

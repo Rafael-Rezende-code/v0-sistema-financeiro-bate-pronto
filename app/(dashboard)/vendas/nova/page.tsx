@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -26,7 +25,6 @@ function formatCurrency(value: number) {
 }
 
 export default function NovaVendaPage() {
-  const router = useRouter()
   const [selectedProduct, setSelectedProduct] = useState<ProductType | null>(null)
   const [personalized, setPersonalized] = useState(false)
   const [customerName, setCustomerName] = useState("")
@@ -97,13 +95,13 @@ export default function NovaVendaPage() {
 
   if (success) {
     return (
-      <div className="flex min-h-[80vh] items-center justify-center p-8">
+      <div className="flex min-h-[60vh] md:min-h-[80vh] items-center justify-center p-4 md:p-8">
         <Card className="w-full max-w-md text-center">
           <CardContent className="pt-8 pb-8">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-              <Check className="h-8 w-8 text-green-600" />
+            <div className="mx-auto mb-4 flex h-14 w-14 md:h-16 md:w-16 items-center justify-center rounded-full bg-green-100">
+              <Check className="h-7 w-7 md:h-8 md:w-8 text-green-600" />
             </div>
-            <h2 className="text-2xl font-bold">Venda Registrada!</h2>
+            <h2 className="text-xl md:text-2xl font-bold">Venda Registrada!</h2>
             <p className="mt-2 text-muted-foreground">
               Lucro: {formatCurrency(profit)}
             </p>
@@ -114,28 +112,28 @@ export default function NovaVendaPage() {
   }
 
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Nova Venda</h1>
-        <p className="text-muted-foreground">
+    <div className="p-4 md:p-8">
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Nova Venda</h1>
+        <p className="text-sm md:text-base text-muted-foreground">
           Registre uma nova venda de camisa
         </p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-6">
+      <div className="grid gap-4 md:gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2 space-y-4 md:space-y-6">
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shirt className="h-5 w-5 text-primary" />
+            <CardHeader className="pb-3 md:pb-6">
+              <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+                <Shirt className="h-4 w-4 md:h-5 md:w-5 text-primary" />
                 Tipo de Camisa
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-xs md:text-sm">
                 Selecione o modelo vendido
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-4 sm:grid-cols-3">
+              <div className="grid gap-3 grid-cols-3">
                 {(Object.keys(PRODUCT_CONFIG) as ProductType[]).map((type) => {
                   const config = PRODUCT_CONFIG[type]
                   const isSelected = selectedProduct === type
@@ -149,25 +147,25 @@ export default function NovaVendaPage() {
                         setCustomPrice("")
                       }}
                       className={cn(
-                        "relative flex flex-col items-center rounded-xl border-2 p-6 transition-all hover:border-primary/50",
+                        "relative flex flex-col items-center rounded-xl border-2 p-3 md:p-6 transition-all hover:border-primary/50",
                         isSelected
                           ? "border-primary bg-primary/5"
                           : "border-border bg-card"
                       )}
                     >
                       {isSelected && (
-                        <div className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-primary">
-                          <Check className="h-4 w-4 text-primary-foreground" />
+                        <div className="absolute -right-1.5 -top-1.5 md:-right-2 md:-top-2 flex h-5 w-5 md:h-6 md:w-6 items-center justify-center rounded-full bg-primary">
+                          <Check className="h-3 w-3 md:h-4 md:w-4 text-primary-foreground" />
                         </div>
                       )}
-                      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                        <Shirt className="h-6 w-6 text-primary" />
+                      <div className="mb-2 md:mb-3 flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-full bg-primary/10">
+                        <Shirt className="h-5 w-5 md:h-6 md:w-6 text-primary" />
                       </div>
-                      <h3 className="font-semibold">{config.label}</h3>
-                      <p className="mt-1 text-lg font-bold text-primary">
+                      <h3 className="font-semibold text-xs md:text-base">{config.label}</h3>
+                      <p className="mt-0.5 md:mt-1 text-sm md:text-lg font-bold text-primary">
                         {formatCurrency(config.basePrice)}
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-[10px] md:text-xs text-muted-foreground hidden sm:block">
                         Custo: {formatCurrency(config.baseCost)}
                       </p>
                     </button>
@@ -179,14 +177,14 @@ export default function NovaVendaPage() {
 
           {selectedProduct === 'jogador' && (
             <Card>
-              <CardHeader>
-                <CardTitle>Variante de Preço</CardTitle>
-                <CardDescription>
+              <CardHeader className="pb-3 md:pb-6">
+                <CardTitle className="text-base md:text-lg">Variante de Preço</CardTitle>
+                <CardDescription className="text-xs md:text-sm">
                   Selecione o preço da camisa jogador
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid gap-3 sm:grid-cols-3">
+                <div className="grid gap-2 md:gap-3 grid-cols-3">
                   {JOGADOR_VARIANTS.map((variant) => (
                     <button
                       key={variant.price}
@@ -195,13 +193,13 @@ export default function NovaVendaPage() {
                         setCustomPrice("")
                       }}
                       className={cn(
-                        "rounded-lg border-2 p-4 text-center transition-all hover:border-primary/50",
+                        "rounded-lg border-2 p-3 md:p-4 text-center transition-all hover:border-primary/50",
                         jogadorVariant === variant.price
                           ? "border-primary bg-primary/5"
                           : "border-border"
                       )}
                     >
-                      <span className="text-lg font-bold">{variant.label}</span>
+                      <span className="text-sm md:text-lg font-bold">{variant.label}</span>
                     </button>
                   ))}
                 </div>
@@ -210,17 +208,17 @@ export default function NovaVendaPage() {
           )}
 
           <Card>
-            <CardHeader>
-              <CardTitle>Detalhes da Venda</CardTitle>
+            <CardHeader className="pb-3 md:pb-6">
+              <CardTitle className="text-base md:text-lg">Detalhes da Venda</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-between rounded-lg border p-4">
+            <CardContent className="space-y-4 md:space-y-6">
+              <div className="flex items-center justify-between rounded-lg border p-3 md:p-4">
                 <div>
-                  <Label htmlFor="personalized" className="text-base font-medium">
+                  <Label htmlFor="personalized" className="text-sm md:text-base font-medium">
                     Personalização
                   </Label>
-                  <p className="text-sm text-muted-foreground">
-                    Adiciona +{formatCurrency(PERSONALIZATION_PRICE)} ao preço
+                  <p className="text-xs md:text-sm text-muted-foreground">
+                    +{formatCurrency(PERSONALIZATION_PRICE)}
                   </p>
                 </div>
                 <Switch
@@ -231,25 +229,27 @@ export default function NovaVendaPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="customerName">Nome do Cliente (opcional)</Label>
+                <Label htmlFor="customerName" className="text-sm">Nome do Cliente (opcional)</Label>
                 <Input
                   id="customerName"
-                  placeholder="Digite o nome do cliente"
+                  placeholder="Digite o nome"
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
+                  className="h-10 md:h-11"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="customPrice">Preço Personalizado (opcional)</Label>
+                <Label htmlFor="customPrice" className="text-sm">Preço Personalizado (opcional)</Label>
                 <Input
                   id="customPrice"
                   type="number"
                   placeholder="Ex: 150"
                   value={customPrice}
                   onChange={(e) => setCustomPrice(e.target.value)}
+                  className="h-10 md:h-11"
                 />
-                <p className="text-xs text-muted-foreground">
+                <p className="text-[10px] md:text-xs text-muted-foreground">
                   Deixe em branco para usar o preço padrão
                 </p>
               </div>
@@ -258,25 +258,25 @@ export default function NovaVendaPage() {
         </div>
 
         <div className="lg:col-span-1">
-          <Card className="sticky top-8">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <ShoppingCart className="h-5 w-5 text-primary" />
+          <Card className="lg:sticky lg:top-8">
+            <CardHeader className="pb-3 md:pb-6">
+              <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+                <ShoppingCart className="h-4 w-4 md:h-5 md:w-5 text-primary" />
                 Resumo
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {selectedProduct ? (
                 <>
-                  <div className="space-y-3 rounded-lg bg-muted p-4">
-                    <div className="flex justify-between">
+                  <div className="space-y-2 md:space-y-3 rounded-lg bg-muted p-3 md:p-4">
+                    <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Produto</span>
                       <span className="font-medium">
                         {PRODUCT_CONFIG[selectedProduct].label}
                       </span>
                     </div>
                     {selectedProduct === 'jogador' && jogadorVariant && (
-                      <div className="flex justify-between">
+                      <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Variante</span>
                         <span className="font-medium">
                           {formatCurrency(jogadorVariant)}
@@ -284,7 +284,7 @@ export default function NovaVendaPage() {
                       </div>
                     )}
                     {personalized && (
-                      <div className="flex justify-between">
+                      <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Personalização</span>
                         <span className="font-medium">
                           +{formatCurrency(PERSONALIZATION_PRICE)}
@@ -292,7 +292,7 @@ export default function NovaVendaPage() {
                       </div>
                     )}
                     {customPrice && (
-                      <div className="flex justify-between">
+                      <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Preço Custom</span>
                         <span className="font-medium">
                           {formatCurrency(Number(customPrice))}
@@ -301,18 +301,18 @@ export default function NovaVendaPage() {
                     )}
                   </div>
 
-                  <div className="border-t pt-4">
-                    <div className="flex justify-between text-lg">
+                  <div className="border-t pt-3 md:pt-4">
+                    <div className="flex justify-between text-base md:text-lg">
                       <span className="font-medium">Total</span>
                       <span className="font-bold text-primary">
                         {formatCurrency(price)}
                       </span>
                     </div>
-                    <div className="mt-2 flex justify-between text-sm">
+                    <div className="mt-2 flex justify-between text-xs md:text-sm">
                       <span className="text-muted-foreground">Custo</span>
                       <span>{formatCurrency(cost)}</span>
                     </div>
-                    <div className="flex justify-between text-sm">
+                    <div className="flex justify-between text-xs md:text-sm">
                       <span className="text-muted-foreground">Lucro</span>
                       <span className="font-medium text-green-600">
                         {formatCurrency(profit)}
@@ -323,14 +323,14 @@ export default function NovaVendaPage() {
                   <Button
                     onClick={handleSubmit}
                     disabled={isSubmitting}
-                    className="w-full"
+                    className="w-full h-11 md:h-12 text-sm md:text-base"
                     size="lg"
                   >
                     {isSubmitting ? "Registrando..." : "Registrar Venda"}
                   </Button>
                 </>
               ) : (
-                <div className="flex h-40 items-center justify-center text-center text-muted-foreground">
+                <div className="flex h-32 md:h-40 items-center justify-center text-center text-muted-foreground text-sm">
                   Selecione um produto para ver o resumo
                 </div>
               )}

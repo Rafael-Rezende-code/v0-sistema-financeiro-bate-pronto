@@ -70,32 +70,32 @@ export default function EstoquePage() {
     : 0
 
   return (
-    <div className="p-8">
-      <div className="mb-8 flex items-center justify-between">
+    <div className="p-4 md:p-8">
+      <div className="mb-6 md:mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Estoque</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Estoque</h1>
+          <p className="text-sm md:text-base text-muted-foreground">
             Gerencie o estoque de camisas
           </p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="w-full sm:w-auto">
               <Plus className="mr-2 h-4 w-4" />
               Registrar Compra
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-md mx-4 sm:mx-auto">
             <DialogHeader>
               <DialogTitle>Registrar Compra de Estoque</DialogTitle>
               <DialogDescription>
                 Adicione novas camisas ao estoque
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-6 py-4">
+            <div className="space-y-4 md:space-y-6 py-4">
               <div className="space-y-3">
                 <Label>Tipo de Camisa</Label>
-                <div className="grid gap-3 sm:grid-cols-3">
+                <div className="grid gap-2 md:gap-3 grid-cols-3">
                   {(Object.keys(PRODUCT_CONFIG) as ProductType[]).map((type) => {
                     const config = PRODUCT_CONFIG[type]
                     const isSelected = selectedProduct === type
@@ -105,50 +105,52 @@ export default function EstoquePage() {
                         key={type}
                         onClick={() => setSelectedProduct(type)}
                         className={cn(
-                          "relative flex flex-col items-center rounded-lg border-2 p-4 transition-all hover:border-primary/50",
+                          "relative flex flex-col items-center rounded-lg border-2 p-2 md:p-4 transition-all hover:border-primary/50",
                           isSelected
                             ? "border-primary bg-primary/5"
                             : "border-border"
                         )}
                       >
                         {isSelected && (
-                          <div className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary">
-                            <Check className="h-3 w-3 text-primary-foreground" />
+                          <div className="absolute -right-1 -top-1 md:-right-1.5 md:-top-1.5 flex h-4 w-4 md:h-5 md:w-5 items-center justify-center rounded-full bg-primary">
+                            <Check className="h-2.5 w-2.5 md:h-3 md:w-3 text-primary-foreground" />
                           </div>
                         )}
-                        <Shirt className="h-5 w-5 text-primary mb-1" />
-                        <span className="text-sm font-medium">{config.label}</span>
+                        <Shirt className="h-4 w-4 md:h-5 md:w-5 text-primary mb-1" />
+                        <span className="text-[10px] md:text-sm font-medium text-center">{config.label}</span>
                       </button>
                     )
                   })}
                 </div>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-3 md:gap-4 grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="quantity">Quantidade</Label>
+                  <Label htmlFor="quantity" className="text-sm">Quantidade</Label>
                   <Input
                     id="quantity"
                     type="number"
                     placeholder="Ex: 10"
                     value={quantity}
                     onChange={(e) => setQuantity(e.target.value)}
+                    className="h-10"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="totalCost">Custo Total (R$)</Label>
+                  <Label htmlFor="totalCost" className="text-sm">Custo Total (R$)</Label>
                   <Input
                     id="totalCost"
                     type="number"
                     placeholder="Ex: 830"
                     value={totalCost}
                     onChange={(e) => setTotalCost(e.target.value)}
+                    className="h-10"
                   />
                 </div>
               </div>
 
               {quantity && totalCost && (
-                <div className="rounded-lg bg-muted p-4">
+                <div className="rounded-lg bg-muted p-3 md:p-4">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Custo unitário:</span>
                     <span className="font-medium">{formatCurrency(unitCost)}</span>
@@ -159,7 +161,7 @@ export default function EstoquePage() {
               <Button
                 onClick={handleSubmit}
                 disabled={!selectedProduct || !quantity || !totalCost || isSubmitting}
-                className="w-full"
+                className="w-full h-10 md:h-11"
               >
                 {isSubmitting ? "Registrando..." : "Registrar Compra"}
               </Button>
@@ -168,7 +170,7 @@ export default function EstoquePage() {
         </Dialog>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-3">
         {(Object.keys(PRODUCT_CONFIG) as ProductType[]).map((type) => {
           const config = PRODUCT_CONFIG[type]
           const item = inventory.find(i => i.product_type === type)
@@ -177,41 +179,41 @@ export default function EstoquePage() {
 
           return (
             <Card key={type}>
-              <CardHeader>
+              <CardHeader className="pb-3 md:pb-6">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <div className="rounded-lg bg-primary/10 p-2">
-                      <Shirt className="h-5 w-5 text-primary" />
+                  <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+                    <div className="rounded-lg bg-primary/10 p-1.5 md:p-2">
+                      <Shirt className="h-4 w-4 md:h-5 md:w-5 text-primary" />
                     </div>
                     {config.label}
                   </CardTitle>
                 </div>
-                <CardDescription>
+                <CardDescription className="text-xs md:text-sm">
                   Preço de venda: {formatCurrency(config.basePrice)}
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between rounded-lg border bg-muted/50 p-4">
-                    <div className="flex items-center gap-3">
-                      <Package className="h-5 w-5 text-muted-foreground" />
-                      <span className="text-muted-foreground">Quantidade</span>
+                <div className="space-y-3 md:space-y-4">
+                  <div className="flex items-center justify-between rounded-lg border bg-muted/50 p-3 md:p-4">
+                    <div className="flex items-center gap-2 md:gap-3">
+                      <Package className="h-4 w-4 md:h-5 md:w-5 text-muted-foreground" />
+                      <span className="text-xs md:text-sm text-muted-foreground">Qtd</span>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 md:gap-3">
                       <Button
                         variant="outline"
                         size="icon"
-                        className="h-8 w-8"
+                        className="h-7 w-7 md:h-8 md:w-8"
                         disabled={qty === 0}
                         onClick={async () => {
                           await adjustInventoryQuantity(type, -1)
                           await loadInventory()
                         }}
                       >
-                        <Minus className="h-4 w-4" />
+                        <Minus className="h-3 w-3 md:h-4 md:w-4" />
                       </Button>
                       <span className={cn(
-                        "text-2xl font-bold min-w-[3ch] text-center",
+                        "text-xl md:text-2xl font-bold min-w-[2.5ch] text-center",
                         qty === 0 && "text-destructive",
                         qty > 0 && qty <= 5 && "text-yellow-600",
                         qty > 5 && "text-green-600"
@@ -221,35 +223,35 @@ export default function EstoquePage() {
                       <Button
                         variant="outline"
                         size="icon"
-                        className="h-8 w-8"
+                        className="h-7 w-7 md:h-8 md:w-8"
                         onClick={async () => {
                           await adjustInventoryQuantity(type, 1)
                           await loadInventory()
                         }}
                       >
-                        <Plus className="h-4 w-4" />
+                        <Plus className="h-3 w-3 md:h-4 md:w-4" />
                       </Button>
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div className="rounded-lg border p-3">
-                      <p className="text-muted-foreground">Custo Médio</p>
-                      <p className="text-lg font-semibold">{formatCurrency(avgCost)}</p>
+                  <div className="grid grid-cols-2 gap-2 md:gap-3 text-xs md:text-sm">
+                    <div className="rounded-lg border p-2 md:p-3">
+                      <p className="text-muted-foreground text-[10px] md:text-xs">Custo Médio</p>
+                      <p className="text-base md:text-lg font-semibold">{formatCurrency(avgCost)}</p>
                     </div>
-                    <div className="rounded-lg border p-3">
-                      <p className="text-muted-foreground">Valor em Estoque</p>
-                      <p className="text-lg font-semibold">{formatCurrency(qty * avgCost)}</p>
+                    <div className="rounded-lg border p-2 md:p-3">
+                      <p className="text-muted-foreground text-[10px] md:text-xs">Valor Total</p>
+                      <p className="text-base md:text-lg font-semibold">{formatCurrency(qty * avgCost)}</p>
                     </div>
                   </div>
 
                   {qty === 0 && (
-                    <div className="rounded-lg bg-destructive/10 p-3 text-center text-sm text-destructive">
+                    <div className="rounded-lg bg-destructive/10 p-2 md:p-3 text-center text-xs md:text-sm text-destructive">
                       Estoque zerado
                     </div>
                   )}
                   {qty > 0 && qty <= 5 && (
-                    <div className="rounded-lg bg-yellow-100 p-3 text-center text-sm text-yellow-700">
+                    <div className="rounded-lg bg-yellow-100 p-2 md:p-3 text-center text-xs md:text-sm text-yellow-700">
                       Estoque baixo
                     </div>
                   )}
