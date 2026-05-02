@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
@@ -14,7 +15,6 @@ import {
   Users,
   TrendingUp,
   Menu,
-  X,
 } from "lucide-react"
 
 const navigation = [
@@ -32,9 +32,13 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <div className="flex h-full flex-col">
       <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-6">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-          <TrendingUp className="h-5 w-5 text-primary-foreground" />
-        </div>
+        <Image 
+          src="/icons/icon-512.png" 
+          alt="Bate Pronto" 
+          width={36} 
+          height={36} 
+          className="rounded-lg"
+        />
         <div>
           <h1 className="text-lg font-bold tracking-tight">Bate Pronto</h1>
           <p className="text-xs text-sidebar-foreground/60">Gestão Financeira</p>
@@ -90,9 +94,13 @@ export function AppSidebar() {
       {/* Mobile Header */}
       <header className="fixed left-0 right-0 top-0 z-50 flex h-14 items-center justify-between border-b bg-background px-4 md:hidden">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-            <TrendingUp className="h-4 w-4 text-primary-foreground" />
-          </div>
+          <Image 
+            src="/icons/icon-512.png" 
+            alt="Bate Pronto" 
+            width={32} 
+            height={32} 
+            className="rounded-lg"
+          />
           <span className="font-bold">Bate Pronto</span>
         </div>
         <Sheet open={open} onOpenChange={setOpen}>
