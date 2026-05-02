@@ -10,18 +10,21 @@ export async function getDashboardStats(
   endDate?: string
 ): Promise<DashboardStats> {
   const supabase = await createClient()
-  
-  const today = new Date()
-  const start = startDate || new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0]
-  const end = endDate || today.toISOString().split('T')[0]
 
-  // Buscar vendas do período
-  const { data: sales } = await supabase
+  // Buscar vendas (todo o histórico por padrão)
+  let salesQuery = supabase
     .from("sales")
     .select("*")
-    .gte("date", start)
-    .lte("date", end)
     .order("created_at", { ascending: false })
+  
+  if (startDate) {
+    salesQuery = salesQuery.gte("date", startDate)
+  }
+  if (endDate) {
+    salesQuery = salesQuery.lte("date", endDate)
+  }
+
+  const { data: sales } = await salesQuery
 
   const salesData = (sales || []) as Sale[]
 
@@ -59,12 +62,19 @@ export async function getDashboardStats(
   // Saldo = entradas - saídas (vendas já estão incluídas como "entrada" no cashflow)
   const cashBalance = totalEntradas - totalSaidas
 
-  // Buscar retiradas
-  const { data: withdrawalsData } = await supabase
+  // Buscar retiradas (todo o histórico para calcular disponível corretamente)
+  let withdrawalsQuery = supabase
     .from("withdrawals")
     .select("*")
-    .gte("date", start)
-    .lte("date", end)
+
+  if (startDate) {
+    withdrawalsQuery = withdrawalsQuery.gte("date", startDate)
+  }
+  if (endDate) {
+    withdrawalsQuery = withdrawalsQuery.lte("date", endDate)
+  }
+
+  const { data: withdrawalsData } = await withdrawalsQuery
 
   const withdrawals = (withdrawalsData || []) as Withdrawal[]
   const withdrawalsByPartner = [
