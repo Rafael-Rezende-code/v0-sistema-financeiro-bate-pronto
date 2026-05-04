@@ -57,6 +57,38 @@ export interface DashboardStats {
   withdrawalsByPartner: { partner: string; total: number }[]
 }
 
+export interface AdvancedStats {
+  // Previsão de lucro mensal
+  currentMonthProfit: number
+  projectedMonthProfit: number
+  daysElapsed: number
+  daysInMonth: number
+  projectionOptimistic: number // +10%
+  lastMonthProfit: number
+  profitGrowthPercentage: number
+  
+  // Comparativo semanal
+  currentWeekRevenue: number
+  lastWeekRevenue: number
+  weeklyGrowthPercentage: number
+  
+  // Heatmap semanal (vendas por dia da semana)
+  weeklyHeatmap: { day: string; dayShort: string; sales: number; revenue: number }[]
+  
+  // Insights
+  insights: { type: 'success' | 'warning' | 'info'; message: string; icon: string }[]
+  
+  // Meta mensal
+  monthlyGoal: number
+  monthlyProgress: number
+  
+  // Foco do dia
+  todaySales: number
+  todayRevenue: number
+  todayProfit: number
+  dailyGoal: number
+}
+
 // Preços configuráveis
 export const PRODUCT_CONFIG = {
   torcedor: {

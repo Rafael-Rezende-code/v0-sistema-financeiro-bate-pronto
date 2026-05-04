@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
-import type { DashboardStats, Sale, Cashflow, Withdrawal, Inventory, ProductType } from "@/lib/types"
+import type { DashboardStats, AdvancedStats, Sale, Cashflow, Withdrawal, Inventory, ProductType } from "@/lib/types"
 import { PRODUCT_CONFIG, PERSONALIZATION_COST, PERSONALIZATION_PRICE } from "@/lib/types"
 
 export async function getDashboardStats(
