@@ -391,3 +391,222 @@ export async function addWithdrawal(formData: FormData) {
   revalidatePath("/caixa")
   revalidatePath("/")
 }
+
+export async function getAdvancedStats(): Promise<AdvancedStats> {
+  const supabase = await createClient()
+  
+  const today = new Date()
+  const currentYear = today.getFullYear()
+  const currentMonth = today.getMonth()
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate()
+  const daysElapsed = today.getDate()
+  
+  // Primeiro dia do mês atual
+  const firstDayCurrentMonth = new Date(currentYear, currentMonth, 1).toISOString().split('T')[0]
+  const todayStr = today.toISOString().split('T')[0]
+  
+  // Primeiro dia do mês passado
+  const firstDayLastMonth = new Date(currentYear, currentMonth - 1, 1).toISOString().split('T')[0]
+  const lastDayLastMonth = new Date(currentYear, currentMonth, 0).toISOString().split('T')[0]
+  
+  // Buscar vendas do mês atual
+  const { data: currentMonthSales } = await supabase
+    .from("sales")
+    .select("*")
+    .gte("date", firstDayCurrentMonth)
+    .lte("date", todayStr)
+  
+  // Buscar vendas do mês passado
+  const { data: lastMonthSales } = await supabase
+    .from("sales")
+    .select("*")
+    .gte("date", firstDayLastMonth)
+    .lte("date", lastDayLastMonth)
+  
+  const currentMonthData = (currentMonthSales || []) as Sale[]
+  const lastMonthData = (lastMonthSales || []) as Sale[]
+  
+  const currentMonthProfit = currentMonthData.reduce((sum, s) => sum + Number(s.profit), 0)
+  const lastMonthProfit = lastMonthData.reduce((sum, s) => sum + Number(s.profit), 0)
+  
+  // Projeção de lucro mensal baseado no ritmo atual
+  const dailyAvgProfit = daysElapsed > 0 ? currentMonthProfit / daysElapsed : 0
+  const projectedMonthProfit = dailyAvgProfit * daysInMonth
+  const projectionOptimistic = projectedMonthProfit * 1.1
+  
+  // Crescimento em relação ao mês passado
+  const profitGrowthPercentage = lastMonthProfit > 0 
+    ? ((currentMonthProfit - lastMonthProfit) / lastMonthProfit) * 100 
+    : currentMonthProfit > 0 ? 100 : 0
+  
+  // Semana atual vs semana passada
+  const dayOfWeek = today.getDay()
+  const startOfCurrentWeek = new Date(today)
+  startOfCurrentWeek.setDate(today.getDate() - dayOfWeek)
+  
+  const startOfLastWeek = new Date(startOfCurrentWeek)
+  startOfLastWeek.setDate(startOfCurrentWeek.getDate() - 7)
+  const endOfLastWeek = new Date(startOfCurrentWeek)
+  endOfLastWeek.setDate(startOfCurrentWeek.getDate() - 1)
+  
+  const { data: currentWeekSales } = await supabase
+    .from("sales")
+    .select("*")
+    .gte("date", startOfCurrentWeek.toISOString().split('T')[0])
+    .lte("date", todayStr)
+  
+  const { data: lastWeekSales } = await supabase
+    .from("sales")
+    .select("*")
+    .gte("date", startOfLastWeek.toISOString().split('T')[0])
+    .lte("date", endOfLastWeek.toISOString().split('T')[0])
+  
+  const currentWeekData = (currentWeekSales || []) as Sale[]
+  const lastWeekData = (lastWeekSales || []) as Sale[]
+  
+  const currentWeekRevenue = currentWeekData.reduce((sum, s) => sum + Number(s.final_price), 0)
+  const lastWeekRevenue = lastWeekData.reduce((sum, s) => sum + Number(s.final_price), 0)
+  const weeklyGrowthPercentage = lastWeekRevenue > 0 
+    ? ((currentWeekRevenue - lastWeekRevenue) / lastWeekRevenue) * 100 
+    : currentWeekRevenue > 0 ? 100 : 0
+  
+  // Heatmap semanal - vendas por dia da semana (últimos 30 dias)
+  const thirtyDaysAgo = new Date(today)
+  thirtyDaysAgo.setDate(today.getDate() - 30)
+  
+  const { data: last30DaysSales } = await supabase
+    .from("sales")
+    .select("*")
+    .gte("date", thirtyDaysAgo.toISOString().split('T')[0])
+  
+  const last30Data = (last30DaysSales || []) as Sale[]
+  
+  const daysOfWeek = [
+    { day: 'Domingo', dayShort: 'Dom' },
+    { day: 'Segunda', dayShort: 'Seg' },
+    { day: 'Terça', dayShort: 'Ter' },
+    { day: 'Quarta', dayShort: 'Qua' },
+    { day: 'Quinta', dayShort: 'Qui' },
+    { day: 'Sexta', dayShort: 'Sex' },
+    { day: 'Sábado', dayShort: 'Sab' },
+  ]
+  
+  const weeklyHeatmap = daysOfWeek.map((d, index) => {
+    const daySales = last30Data.filter(s => {
+      const saleDate = new Date(s.date)
+      return saleDate.getDay() === index
+    })
+    return {
+      ...d,
+      sales: daySales.length,
+      revenue: daySales.reduce((sum, s) => sum + Number(s.final_price), 0),
+    }
+  })
+  
+  // Vendas de hoje
+  const { data: todaySalesData } = await supabase
+    .from("sales")
+    .select("*")
+    .eq("date", todayStr)
+  
+  const todayData = (todaySalesData || []) as Sale[]
+  const todaySales = todayData.length
+  const todayRevenue = todayData.reduce((sum, s) => sum + Number(s.final_price), 0)
+  const todayProfit = todayData.reduce((sum, s) => sum + Number(s.profit), 0)
+  
+  // Meta mensal (fixa em R$ 3000 por enquanto, depois pode ser configurável)
+  const monthlyGoal = 3000
+  const currentMonthRevenue = currentMonthData.reduce((sum, s) => sum + Number(s.final_price), 0)
+  const monthlyProgress = (currentMonthRevenue / monthlyGoal) * 100
+  
+  // Meta diária baseada na meta mensal
+  const dailyGoal = monthlyGoal / daysInMonth
+  
+  // Gerar insights automáticos
+  const insights: AdvancedStats['insights'] = []
+  
+  // Buscar todas as vendas para produto mais vendido
+  const { data: allSales } = await supabase.from("sales").select("*")
+  const allSalesData = (allSales || []) as Sale[]
+  
+  // Produto mais vendido
+  const productCounts = { torcedor: 0, jogador: 0, retro: 0 }
+  allSalesData.forEach(s => {
+    if (s.product_type in productCounts) {
+      productCounts[s.product_type as keyof typeof productCounts]++
+    }
+  })
+  const topProduct = Object.entries(productCounts).sort((a, b) => b[1] - a[1])[0]
+  if (topProduct && topProduct[1] > 0) {
+    const labels: Record<string, string> = { torcedor: 'Torcedor', jogador: 'Jogador', retro: 'Retrô' }
+    insights.push({
+      type: 'info',
+      message: `Produto mais vendido: Camisa ${labels[topProduct[0]]}`,
+      icon: 'shirt',
+    })
+  }
+  
+  // Comparação com mês passado
+  if (profitGrowthPercentage > 0) {
+    insights.push({
+      type: 'success',
+      message: `Você está ${profitGrowthPercentage.toFixed(0)}% acima do mês passado!`,
+      icon: 'trending-up',
+    })
+  } else if (profitGrowthPercentage < 0) {
+    insights.push({
+      type: 'warning',
+      message: `Lucro ${Math.abs(profitGrowthPercentage).toFixed(0)}% abaixo do mês passado`,
+      icon: 'trending-down',
+    })
+  }
+  
+  // Ticket médio
+  const currentTicket = currentMonthData.length > 0 
+    ? currentMonthData.reduce((sum, s) => sum + Number(s.final_price), 0) / currentMonthData.length 
+    : 0
+  const lastTicket = lastMonthData.length > 0 
+    ? lastMonthData.reduce((sum, s) => sum + Number(s.final_price), 0) / lastMonthData.length 
+    : 0
+  
+  if (lastTicket > 0 && currentTicket > 0) {
+    const ticketChange = ((currentTicket - lastTicket) / lastTicket) * 100
+    if (Math.abs(ticketChange) > 5) {
+      insights.push({
+        type: ticketChange > 0 ? 'success' : 'warning',
+        message: `Ticket médio ${ticketChange > 0 ? 'subiu' : 'caiu'} ${Math.abs(ticketChange).toFixed(0)}% este mês`,
+        icon: ticketChange > 0 ? 'arrow-up' : 'arrow-down',
+      })
+    }
+  }
+  
+  // Melhor mês potencial
+  if (projectedMonthProfit > lastMonthProfit && lastMonthProfit > 0) {
+    insights.push({
+      type: 'success',
+      message: 'Este pode ser seu melhor mês!',
+      icon: 'star',
+    })
+  }
+  
+  return {
+    currentMonthProfit,
+    projectedMonthProfit,
+    daysElapsed,
+    daysInMonth,
+    projectionOptimistic,
+    lastMonthProfit,
+    profitGrowthPercentage,
+    currentWeekRevenue,
+    lastWeekRevenue,
+    weeklyGrowthPercentage,
+    weeklyHeatmap,
+    insights: insights.slice(0, 3),
+    monthlyGoal,
+    monthlyProgress,
+    todaySales,
+    todayRevenue,
+    todayProfit,
+    dailyGoal,
+  }
+}

@@ -1,6 +1,12 @@
-import { getDashboardStats } from "./actions"
+import { getDashboardStats, getAdvancedStats } from "./actions"
 import { StatCard } from "@/components/stat-card"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { ProfitForecastCard } from "@/components/dashboard/profit-forecast-card"
+import { WeekComparisonCard } from "@/components/dashboard/week-comparison-card"
+import { WeeklyHeatmap } from "@/components/dashboard/weekly-heatmap"
+import { MonthlyGoalCard } from "@/components/dashboard/monthly-goal-card"
+import { InsightsBar } from "@/components/dashboard/insights-bar"
+import { FocusMode, ScenarioSimulator } from "@/components/dashboard/focus-and-simulator"
 import { 
   ShoppingCart, 
   DollarSign, 
@@ -26,17 +32,35 @@ function formatDate(date: string) {
 }
 
 export default async function DashboardPage() {
-  const stats = await getDashboardStats()
+  const [stats, advancedStats] = await Promise.all([
+    getDashboardStats(),
+    getAdvancedStats(),
+  ])
 
   return (
     <div className="p-4 md:p-8">
-      <div className="mb-6 md:mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-sm md:text-base text-muted-foreground">
-          Visão geral do seu negócio
-        </p>
+      {/* Header com botoes de acao */}
+      <div className="mb-6 md:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-sm md:text-base text-muted-foreground">
+            Visao geral do seu negocio
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <FocusMode stats={advancedStats} />
+          <ScenarioSimulator totalRevenue={stats.totalRevenue} totalProfit={stats.totalProfit} />
+        </div>
       </div>
 
+      {/* Insights automaticos */}
+      {advancedStats.insights.length > 0 && (
+        <div className="mb-6">
+          <InsightsBar insights={advancedStats.insights} />
+        </div>
+      )}
+
+      {/* Cards principais */}
       <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Vendas"
@@ -61,13 +85,26 @@ export default async function DashboardPage() {
         <StatCard
           title="Saldo em Caixa"
           value={formatCurrency(stats.cashBalance)}
-          description="Disponível"
+          description="Disponivel"
           icon={Wallet}
         />
       </div>
 
+      {/* Cards de inteligencia */}
       <div className="mt-6 md:mt-8 grid gap-4 md:gap-6 lg:grid-cols-2">
-        <Card>
+        <ProfitForecastCard stats={advancedStats} />
+        <MonthlyGoalCard stats={advancedStats} />
+      </div>
+
+      {/* Comparativo e Heatmap */}
+      <div className="mt-4 md:mt-6 grid gap-4 md:gap-6 lg:grid-cols-2">
+        <WeekComparisonCard stats={advancedStats} />
+        <WeeklyHeatmap stats={advancedStats} />
+      </div>
+
+      {/* Vendas por produto e Retiradas */}
+      <div className="mt-4 md:mt-6 grid gap-4 md:gap-6 lg:grid-cols-2">
+        <Card className="transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">
           <CardHeader className="pb-3 md:pb-6">
             <CardTitle className="flex items-center gap-2 text-base md:text-lg">
               <Shirt className="h-4 w-4 md:h-5 md:w-5 text-primary" />
@@ -91,7 +128,7 @@ export default async function DashboardPage() {
                     </div>
                     <div className="h-1.5 md:h-2 w-full overflow-hidden rounded-full bg-secondary">
                       <div
-                        className="h-full rounded-full bg-primary transition-all"
+                        className="h-full rounded-full bg-primary transition-all duration-500"
                         style={{ width: `${percentage}%` }}
                       />
                     </div>
@@ -102,11 +139,11 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">
           <CardHeader className="pb-3 md:pb-6">
             <CardTitle className="flex items-center gap-2 text-base md:text-lg">
               <Users className="h-4 w-4 md:h-5 md:w-5 text-primary" />
-              Retiradas dos Sócios
+              Retiradas dos Socios
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -118,7 +155,7 @@ export default async function DashboardPage() {
                 return (
                   <div
                     key={partner.partner}
-                    className="flex items-center justify-between rounded-lg border bg-card p-3 md:p-4"
+                    className="flex items-center justify-between rounded-lg border bg-card p-3 md:p-4 transition-all hover:bg-muted/50"
                   >
                     <div>
                       <p className="font-semibold text-sm md:text-base">{partner.partner}</p>
@@ -128,7 +165,7 @@ export default async function DashboardPage() {
                     </div>
                     <div className="text-right">
                       <p className="text-xs text-muted-foreground">
-                        Disponível
+                        Disponivel
                       </p>
                       <p className="text-base md:text-lg font-bold text-primary">
                         {formatCurrency(saldoDisponivel > 0 ? saldoDisponivel : 0)}
@@ -142,11 +179,12 @@ export default async function DashboardPage() {
         </Card>
       </div>
 
-      <Card className="mt-4 md:mt-6">
+      {/* Ultimas vendas */}
+      <Card className="mt-4 md:mt-6 transition-all duration-300 hover:shadow-lg">
         <CardHeader className="pb-3 md:pb-6">
           <CardTitle className="flex items-center gap-2 text-base md:text-lg">
             <TrendingUp className="h-4 w-4 md:h-5 md:w-5 text-primary" />
-            Últimas Vendas
+            Ultimas Vendas
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -162,7 +200,7 @@ export default async function DashboardPage() {
                 return (
                   <div
                     key={sale.id}
-                    className="flex items-center justify-between rounded-lg border bg-card p-3 md:p-4"
+                    className="flex items-center justify-between rounded-lg border bg-card p-3 md:p-4 transition-all hover:bg-muted/50"
                   >
                     <div className="flex items-center gap-3 md:gap-4">
                       <div className="hidden sm:flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
@@ -184,7 +222,7 @@ export default async function DashboardPage() {
                     </div>
                     <div className="text-right">
                       <p className="font-semibold text-sm md:text-base">{formatCurrency(sale.final_price)}</p>
-                      <p className="text-xs md:text-sm text-green-600">
+                      <p className="text-xs md:text-sm text-green-600 dark:text-green-400">
                         +{formatCurrency(sale.profit)}
                       </p>
                     </div>
