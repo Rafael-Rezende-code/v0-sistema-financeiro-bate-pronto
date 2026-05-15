@@ -129,3 +129,12 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Safe area para dispositivos com notch */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}

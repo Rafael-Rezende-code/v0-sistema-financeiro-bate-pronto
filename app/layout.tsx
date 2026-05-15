@@ -3,6 +3,7 @@ import { Inter, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 import { ServiceWorkerRegistration } from '@/components/service-worker-registration'
+import { ThemeProvider } from '@/components/theme-provider'
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono" });
@@ -41,15 +42,22 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="pt-BR" className="bg-background">
+    <html lang="pt-BR" suppressHydrationWarning>
       <head>
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="mobile-web-app-capable" content="yes" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
       </head>
-      <body className={`${inter.variable} ${geistMono.variable} font-sans antialiased`}>
-        {children}
-        <ServiceWorkerRegistration />
+      <body className={`${inter.variable} ${geistMono.variable} font-sans antialiased bg-background`}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+          <ServiceWorkerRegistration />
+        </ThemeProvider>
         <Analytics />
       </body>
     </html>
