@@ -1,14 +1,13 @@
 "use client"
 
 import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Focus, ShoppingCart, TrendingUp, Target, Calculator } from "lucide-react"
 import { cn } from "@/lib/utils"
-import type { AdvancedStats, DashboardStats } from "@/lib/types"
+import type { AdvancedStats } from "@/lib/types"
 
 interface FocusModeProps {
   stats: AdvancedStats
@@ -17,6 +16,7 @@ interface FocusModeProps {
 export function FocusMode({ stats }: FocusModeProps) {
   const [open, setOpen] = useState(false)
   const dailyProgress = stats.dailyGoal > 0 ? (stats.todayRevenue / stats.dailyGoal) * 100 : 0
+  const isGoalReached = dailyProgress >= 100
   
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -46,9 +46,9 @@ export function FocusMode({ stats }: FocusModeProps) {
               <p className="text-2xl font-bold">R$ {stats.todayRevenue.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}</p>
               <p className="text-xs text-muted-foreground">Faturamento</p>
             </div>
-            <div className="rounded-lg bg-green-500/10 p-4 text-center">
-              <Target className="h-5 w-5 mx-auto mb-2 text-green-600" />
-              <p className="text-2xl font-bold text-green-600">R$ {stats.todayProfit.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}</p>
+            <div className="rounded-lg bg-primary/10 p-4 text-center">
+              <Target className="h-5 w-5 mx-auto mb-2 text-primary" />
+              <p className="text-2xl font-bold text-primary">R$ {stats.todayProfit.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}</p>
               <p className="text-xs text-muted-foreground">Lucro</p>
             </div>
           </div>
@@ -60,16 +60,13 @@ export function FocusMode({ stats }: FocusModeProps) {
             </div>
             <div className="relative h-3 w-full overflow-hidden rounded-full bg-muted">
               <div 
-                className={cn(
-                  "absolute left-0 top-0 h-full transition-all duration-500 rounded-full",
-                  dailyProgress >= 100 ? "bg-green-500" : "bg-primary"
-                )}
+                className="absolute left-0 top-0 h-full transition-all duration-500 rounded-full bg-primary"
                 style={{ width: `${Math.min(dailyProgress, 100)}%` }}
               />
             </div>
             <p className="text-center text-sm">
-              {dailyProgress >= 100 ? (
-                <span className="text-green-600 font-medium">Meta diaria atingida!</span>
+              {isGoalReached ? (
+                <span className="text-primary font-medium">Meta diaria atingida!</span>
               ) : (
                 <span className="text-muted-foreground">
                   {dailyProgress.toFixed(0)}% da meta - faltam R$ {(stats.dailyGoal - stats.todayRevenue).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
@@ -109,7 +106,7 @@ export function ScenarioSimulator({ totalRevenue, totalProfit }: ScenarioSimulat
       <DialogTrigger asChild>
         <Button variant="outline" className="gap-2">
           <Calculator className="h-4 w-4" />
-          <span className="hidden sm:inline">Simular cenario</span>
+          <span className="hidden sm:inline">Simular</span>
           <span className="sm:hidden">Simular</span>
         </Button>
       </DialogTrigger>
@@ -154,7 +151,7 @@ export function ScenarioSimulator({ totalRevenue, totalProfit }: ScenarioSimulat
               <span className="text-muted-foreground">Novo faturamento:</span>
               <span className={cn(
                 "font-bold",
-                changePercent > 0 ? "text-green-600" : changePercent < 0 ? "text-destructive" : ""
+                changePercent > 0 ? "text-primary" : changePercent < 0 ? "text-muted-foreground" : ""
               )}>
                 R$ {newRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </span>
@@ -167,7 +164,7 @@ export function ScenarioSimulator({ totalRevenue, totalProfit }: ScenarioSimulat
               <span className="text-muted-foreground">Novo lucro estimado:</span>
               <span className={cn(
                 "font-bold",
-                changePercent > 0 ? "text-green-600" : changePercent < 0 ? "text-destructive" : ""
+                changePercent > 0 ? "text-primary" : changePercent < 0 ? "text-muted-foreground" : ""
               )}>
                 R$ {newProfit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </span>

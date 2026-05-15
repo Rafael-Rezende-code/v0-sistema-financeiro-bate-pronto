@@ -7,7 +7,7 @@ interface StatCardProps {
   value: string
   description?: string
   icon: LucideIcon
-  variant?: "default" | "primary" | "success" | "warning"
+  variant?: "default" | "primary" | "highlight"
 }
 
 export function StatCard({
@@ -19,9 +19,9 @@ export function StatCard({
 }: StatCardProps) {
   return (
     <Card className={cn(
-      "relative overflow-hidden",
+      "relative overflow-hidden transition-all duration-300 hover:shadow-md",
       variant === "primary" && "bg-primary text-primary-foreground",
-      variant === "success" && "bg-green-50 border-green-200",
+      variant === "highlight" && "bg-primary/5 border-primary/20",
     )}>
       <CardContent className="p-3 md:p-6">
         <div className="flex items-start justify-between gap-2">
@@ -30,13 +30,13 @@ export function StatCard({
               "text-[11px] md:text-sm font-medium truncate",
               variant === "default" && "text-muted-foreground",
               variant === "primary" && "opacity-80",
-              variant === "success" && "text-green-700",
+              variant === "highlight" && "text-primary",
             )}>
               {title}
             </p>
             <p className={cn(
               "text-base md:text-2xl font-bold tracking-tight truncate",
-              variant === "success" && "text-green-700",
+              variant === "highlight" && "text-foreground",
             )}>
               {value}
             </p>
@@ -45,7 +45,7 @@ export function StatCard({
                 "text-[10px] md:text-xs truncate",
                 variant === "default" && "text-muted-foreground",
                 variant === "primary" && "opacity-70",
-                variant === "success" && "text-green-600",
+                variant === "highlight" && "text-muted-foreground",
               )}>
                 {description}
               </p>
@@ -55,13 +55,13 @@ export function StatCard({
             "rounded-lg p-1.5 md:p-2.5 shrink-0",
             variant === "default" && "bg-primary/10",
             variant === "primary" && "bg-white/20",
-            variant === "success" && "bg-green-100",
+            variant === "highlight" && "bg-primary/10",
           )}>
             <Icon className={cn(
               "h-4 w-4 md:h-5 md:w-5",
               variant === "default" && "text-primary",
               variant === "primary" && "text-current",
-              variant === "success" && "text-green-600",
+              variant === "highlight" && "text-primary",
             )} />
           </div>
         </div>
