@@ -1,0 +1,27 @@
+{
+  "name": "Bate Pronto - Gestão Financeira",
+  "short_name": "Bate Pronto",
+  "description": "Sistema de gestão financeira para loja de camisetas de futebol",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FF6A00",
+  "theme_color": "#FF6A00",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["business", "finance"],
+  "lang": "pt-BR",
+  "dir": "ltr"
+}
