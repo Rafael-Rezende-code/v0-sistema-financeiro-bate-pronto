@@ -17,6 +17,7 @@ import {
   Sun,
   UserCircle,
   Archive,
+  BarChart3,
 } from "lucide-react"
 
 const navigation = [
@@ -28,6 +29,7 @@ const navigation = [
   { name: "Retiradas", href: "/retiradas", icon: Users },
   { name: "Clientes", href: "/clientes", icon: UserCircle },
   { name: "Lotes", href: "/lotes", icon: Archive },
+  { name: "DRE", href: "/dre", icon: BarChart3 },
 ]
 
 // Navegação simplificada para mobile (5 itens max para caber bem)

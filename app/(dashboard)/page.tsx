@@ -1,17 +1,18 @@
-import { getDashboardStats, getAdvancedStats } from "./actions"
+import { getDashboardStats, getAdvancedStats, getDRE, getEstoqueAlerta } from "./actions"
 import { StatCard } from "@/components/stat-card"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ProfitForecastCard } from "@/components/dashboard/profit-forecast-card"
 import { WeekComparisonCard } from "@/components/dashboard/week-comparison-card"
 import { WeeklyHeatmap } from "@/components/dashboard/weekly-heatmap"
 import { FocusMode, ScenarioSimulator } from "@/components/dashboard/focus-and-simulator"
-import { 
-  ShoppingCart, 
-  DollarSign, 
-  TrendingUp, 
+import {
+  ShoppingCart,
+  DollarSign,
+  TrendingUp,
   Wallet,
   Shirt,
   Users,
+  Package,
 } from "lucide-react"
 import { PRODUCT_CONFIG } from "@/lib/types"
 
@@ -30,9 +31,11 @@ function formatDate(date: string) {
 }
 
 export default async function DashboardPage() {
-  const [stats, advancedStats] = await Promise.all([
+  const [stats, advancedStats, dreData, estoqueAlerta] = await Promise.all([
     getDashboardStats(),
     getAdvancedStats(),
+    getDRE(),
+    getEstoqueAlerta(),
   ])
 
   return (
@@ -80,6 +83,82 @@ export default async function DashboardPage() {
           icon={Wallet}
         />
       </div>
+
+      {/* DRE do mês atual */}
+      {dreData.length > 0 && (() => {
+        const mesAtual = dreData[0]
+        return (
+          <Card className="mt-4">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <TrendingUp className="h-4 w-4 text-primary" />
+                DRE — {new Date(mesAtual.mes + 'T12:00:00').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <div className="rounded-lg bg-muted p-3">
+                  <p className="text-xs text-muted-foreground">Faturamento</p>
+                  <p className="text-sm font-bold">{formatCurrency(mesAtual.faturamento)}</p>
+                </div>
+                <div className="rounded-lg bg-muted p-3">
+                  <p className="text-xs text-muted-foreground">Lucro bruto</p>
+                  <p className="text-sm font-bold text-primary">{formatCurrency(mesAtual.lucro_bruto)}</p>
+                  <p className="text-xs text-muted-foreground">{mesAtual.margem_bruta_pct}%</p>
+                </div>
+                <div className="rounded-lg bg-muted p-3">
+                  <p className="text-xs text-muted-foreground">Imposto</p>
+                  <p className="text-sm font-bold text-amber-600">-{formatCurrency(mesAtual.imposto_periodo)}</p>
+                </div>
+                <div className={`rounded-lg p-3 ${Number(mesAtual.lucro_liquido_estimado) >= 0 ? 'bg-green-50 dark:bg-green-950' : 'bg-red-50 dark:bg-red-950'}`}>
+                  <p className="text-xs text-muted-foreground">Lucro líquido</p>
+                  <p className={`text-sm font-bold ${Number(mesAtual.lucro_liquido_estimado) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {formatCurrency(mesAtual.lucro_liquido_estimado)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{mesAtual.margem_liquida_pct}%</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )
+      })()}
+
+      {/* Alerta de estoque */}
+      {estoqueAlerta.some((e: any) => e.status_giro !== 'OK') && (
+        <Card className="mt-4 border-amber-200 dark:border-amber-800">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base text-amber-600">
+              <Package className="h-4 w-4" />
+              Alerta de Estoque
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {estoqueAlerta
+                .filter((e: any) => e.status_giro !== 'OK')
+                .map((item: any) => (
+                  <div key={item.product_type} className="flex items-center justify-between rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950 p-3">
+                    <div>
+                      <p className="text-sm font-medium capitalize">{item.product_type}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {item.pecas_em_estoque} peças · {item.dias_desde_ultima_venda ? `${item.dias_desde_ultima_venda} dias sem venda` : 'Nunca vendido'}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                        item.status_giro === 'ALERTA' || item.status_giro === 'SEM VENDAS'
+                          ? 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
+                          : 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300'
+                      }`}>
+                        {item.status_giro}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Previsao e Comparativo */}
       <div className="mt-6 grid gap-4 lg:grid-cols-2">

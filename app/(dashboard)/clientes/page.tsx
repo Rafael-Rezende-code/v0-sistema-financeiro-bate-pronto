@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { getCustomers, createCustomer, updateCustomer, deleteCustomer } from "../actions"
+import { getCustomersWithStats, createCustomer, updateCustomer, deleteCustomer } from "../actions"
 import type { Customer } from "@/lib/types"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -15,20 +15,35 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog"
-import { Users, Plus, Pencil, Trash2, Phone } from "lucide-react"
+import { Users, Plus, Pencil, Trash2, Phone, ShoppingBag, Clock } from "lucide-react"
+
+type CustomerWithStats = Customer & {
+  last_purchase_at?: string | null
+  days_since_last_purchase?: number | null
+  total_spent?: number | null
+  total_orders?: number | null
+}
+
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value)
+}
+
+function formatDate(date: string) {
+  return new Date(date + "T12:00:00").toLocaleDateString("pt-BR")
+}
 
 export default function ClientesPage() {
-  const [customers, setCustomers] = useState<Customer[]>([])
+  const [customers, setCustomers] = useState<CustomerWithStats[]>([])
   const [loading, setLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null)
+  const [editingCustomer, setEditingCustomer] = useState<CustomerWithStats | null>(null)
   const [form, setForm] = useState({ name: "", whatsapp: "", team_1: "", notes: "" })
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const fetchCustomers = async () => {
     try {
-      const data = await getCustomers()
-      setCustomers(data)
+      const data = await getCustomersWithStats()
+      setCustomers(data as CustomerWithStats[])
     } finally {
       setLoading(false)
     }
@@ -153,8 +168,23 @@ export default function ClientesPage() {
                     </Button>
                   </div>
                 </div>
+                <div className="mt-3 border-t pt-2 grid grid-cols-2 gap-1.5">
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <ShoppingBag className="h-3 w-3 shrink-0" />
+                    <span>{customer.total_orders || 0} compras</span>
+                  </div>
+                  <div className="text-xs text-right font-medium text-primary">
+                    {formatCurrency(customer.total_spent || 0)}
+                  </div>
+                  <div className="col-span-2 flex items-center gap-1 text-xs text-muted-foreground">
+                    <Clock className="h-3 w-3 shrink-0" />
+                    {customer.last_purchase_at
+                      ? `Última compra: ${formatDate(customer.last_purchase_at)}${customer.days_since_last_purchase ? ` (${customer.days_since_last_purchase}d)` : ''}`
+                      : 'Nunca comprou'}
+                  </div>
+                </div>
                 {customer.notes && (
-                  <p className="mt-3 text-xs text-muted-foreground border-t pt-2 line-clamp-2">
+                  <p className="mt-2 text-xs text-muted-foreground border-t pt-2 line-clamp-2">
                     {customer.notes}
                   </p>
                 )}

@@ -708,3 +708,32 @@ export async function linkTaxToPurchaseOrder(cashflowId: string, purchaseOrderId
   revalidatePath("/lotes")
   revalidatePath("/caixa")
 }
+
+export async function getDRE() {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("v_dre_mensal")
+    .select("*")
+    .order("mes", { ascending: false })
+  if (error) throw new Error(`Erro ao buscar DRE: ${error.message}`)
+  return data || []
+}
+
+export async function getEstoqueAlerta() {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("v_estoque_alerta")
+    .select("*")
+  if (error) throw new Error(`Erro ao buscar estoque: ${error.message}`)
+  return data || []
+}
+
+export async function getCustomersWithStats() {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("v_customer_stats")
+    .select("*")
+    .order("name", { ascending: true })
+  if (error) throw new Error(`Erro ao buscar clientes: ${error.message}`)
+  return data || []
+}
