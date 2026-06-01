@@ -25,9 +25,9 @@ export interface PurchaseOrder {
 }
 
 export interface PurchaseOrderWithCost extends PurchaseOrder {
-  cost_per_unit?: number | null
-  min_price_40?: number | null
-  min_price_45?: number | null
+  unit_cost_brl?: number | null
+  min_price_40pct?: number | null
+  min_price_45pct?: number | null
 }
 
 export interface Sale {

@@ -159,30 +159,30 @@ export default function LotesPage() {
                       <p className="font-medium">{formatBRL(lote.purchase_amount_brl)}</p>
                     </div>
                   )}
-                  {lote.cost_per_unit && (
+                  {lote.unit_cost_brl && (
                     <div>
                       <p className="text-xs text-muted-foreground">Custo/peça</p>
-                      <p className="font-semibold text-primary">{formatBRL(lote.cost_per_unit)}</p>
+                      <p className="font-semibold text-primary">{formatBRL(lote.unit_cost_brl)}</p>
                     </div>
                   )}
                 </div>
-                {(lote.min_price_40 || lote.min_price_45) && (
+                {(lote.min_price_40pct || lote.min_price_45pct) && (
                   <div className="border-t pt-2 space-y-1">
                     <p className="text-xs text-muted-foreground flex items-center gap-1">
                       <Calculator className="h-3 w-3" />
                       Preço mínimo
                     </p>
                     <div className="grid grid-cols-2 gap-2 text-xs">
-                      {lote.min_price_40 && (
+                      {lote.min_price_40pct && (
                         <div className="rounded bg-yellow-50 dark:bg-yellow-950 p-1.5">
                           <p className="text-muted-foreground">40% margem</p>
-                          <p className="font-semibold">{formatBRL(lote.min_price_40)}</p>
+                          <p className="font-semibold">{formatBRL(lote.min_price_40pct)}</p>
                         </div>
                       )}
-                      {lote.min_price_45 && (
+                      {lote.min_price_45pct && (
                         <div className="rounded bg-green-50 dark:bg-green-950 p-1.5">
                           <p className="text-muted-foreground">45% margem</p>
-                          <p className="font-semibold">{formatBRL(lote.min_price_45)}</p>
+                          <p className="font-semibold">{formatBRL(lote.min_price_45pct)}</p>
                         </div>
                       )}
                     </div>
