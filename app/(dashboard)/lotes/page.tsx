@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { getPurchaseOrders, createPurchaseOrder, getUnlinkedTaxes, linkTaxToLote } from "../actions"
+import { getPurchaseOrders, createPurchaseOrder, getUnlinkedTaxes, linkTaxToLote, updateLote } from "../actions"
 import type { PurchaseOrderWithCost } from "@/lib/types"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -17,7 +17,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog"
-import { Package, Plus, Calculator, Link2, MapPin, ListChecks } from "lucide-react"
+import { Package, Plus, Calculator, Link2, MapPin, ListChecks, Pencil } from "lucide-react"
 
 function formatBRL(value: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value)
@@ -47,6 +47,16 @@ export default function LotesPage() {
     items_description: "",
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [editingLote, setEditingLote] = useState<PurchaseOrderWithCost | null>(null)
+  const [editForm, setEditForm] = useState({
+    arrival_date: "",
+    tracking_code: "",
+    items_description: "",
+    supplier: "",
+    notes: "",
+  })
+  const [isEditSubmitting, setIsEditSubmitting] = useState(false)
   const [unlinkedTaxes, setUnlinkedTaxes] = useState<any[]>([])
   const [taxLoteMap, setTaxLoteMap] = useState<Record<string, string>>({})
   const [linkingId, setLinkingId] = useState<string | null>(null)
@@ -78,6 +88,38 @@ export default function LotesPage() {
       console.error(e)
     } finally {
       setLinkingId(null)
+    }
+  }
+
+  const openEdit = (lote: PurchaseOrderWithCost) => {
+    setEditingLote(lote)
+    setEditForm({
+      arrival_date: lote.arrival_date || "",
+      tracking_code: lote.tracking_code || "",
+      items_description: lote.items_description || "",
+      supplier: lote.supplier || "",
+      notes: lote.notes || "",
+    })
+    setIsEditDialogOpen(true)
+  }
+
+  const handleEditSubmit = async () => {
+    if (!editingLote) return
+    setIsEditSubmitting(true)
+    try {
+      const fd = new FormData()
+      fd.set("arrival_date", editForm.arrival_date)
+      fd.set("tracking_code", editForm.tracking_code)
+      fd.set("items_description", editForm.items_description)
+      fd.set("supplier", editForm.supplier)
+      fd.set("notes", editForm.notes)
+      await updateLote(editingLote.id, fd)
+      setIsEditDialogOpen(false)
+      await fetchLotes()
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setIsEditSubmitting(false)
     }
   }
 
@@ -162,11 +204,21 @@ export default function LotesPage() {
                     <Package className="h-4 w-4 text-primary" />
                     {lote.quantity} peças
                   </CardTitle>
-                  {lote.arrival_date && (
-                    <Badge variant="outline" className="text-xs">
-                      {formatDate(lote.arrival_date)}
-                    </Badge>
-                  )}
+                  <div className="flex items-center gap-1.5">
+                    {lote.arrival_date && (
+                      <Badge variant="outline" className="text-xs">
+                        {formatDate(lote.arrival_date)}
+                      </Badge>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() => openEdit(lote)}
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </div>
                 {lote.supplier && (
                   <p className="text-xs text-muted-foreground">{lote.supplier}</p>
@@ -440,6 +492,71 @@ export default function LotesPage() {
               }
             >
               {isSubmitting ? "Salvando..." : "Salvar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Editar Lote</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="edit-arrival_date">Data de Chegada</Label>
+              <Input
+                id="edit-arrival_date"
+                type="date"
+                value={editForm.arrival_date}
+                onChange={(e) => setEditForm({ ...editForm, arrival_date: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-supplier">Fornecedor</Label>
+              <Input
+                id="edit-supplier"
+                value={editForm.supplier}
+                onChange={(e) => setEditForm({ ...editForm, supplier: e.target.value })}
+                placeholder="Nome do fornecedor"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-tracking_code">Código de rastreio</Label>
+              <Input
+                id="edit-tracking_code"
+                value={editForm.tracking_code}
+                onChange={(e) => setEditForm({ ...editForm, tracking_code: e.target.value })}
+                placeholder="Ex: LZ415128335CN"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-items_description">Itens do lote</Label>
+              <Textarea
+                id="edit-items_description"
+                value={editForm.items_description}
+                onChange={(e) => setEditForm({ ...editForm, items_description: e.target.value })}
+                placeholder="Ex: Brasil jogador G (João), Corinthians torcedor M (Mateus)..."
+                rows={3}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-notes">Observações</Label>
+              <Textarea
+                id="edit-notes"
+                value={editForm.notes}
+                onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                placeholder="Notas sobre o lote"
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleEditSubmit} disabled={isEditSubmitting}>
+              {isEditSubmitting ? "Salvando..." : "Salvar"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
-import type { DashboardStats, AdvancedStats, Sale, Cashflow, Withdrawal, Inventory, ProductType, Customer, PurchaseOrderWithCost } from "@/lib/types"
+import type { DashboardStats, AdvancedStats, Sale, Cashflow, Withdrawal, Inventory, ProductType, Customer, PurchaseOrderWithCost, Setting } from "@/lib/types"
 import { PRODUCT_CONFIG, PERSONALIZATION_COST, PERSONALIZATION_PRICE } from "@/lib/types"
 
 export async function getDashboardStats(
@@ -754,6 +754,21 @@ export async function getUnlinkedTaxes() {
   return data || []
 }
 
+export async function updateLote(id: string, formData: FormData) {
+  const supabase = await createClient()
+  const arrival_date = (formData.get('arrival_date') as string) || null
+  const tracking_code = (formData.get('tracking_code') as string) || null
+  const items_description = (formData.get('items_description') as string) || null
+  const supplier = (formData.get('supplier') as string) || null
+  const notes = (formData.get('notes') as string) || null
+  const { error } = await supabase
+    .from('purchase_orders')
+    .update({ arrival_date, tracking_code, items_description, supplier, notes })
+    .eq('id', id)
+  if (error) throw new Error(`Erro: ${error.message}`)
+  revalidatePath('/lotes')
+}
+
 export async function linkTaxToLote(cashflowId: string, purchaseOrderId: string) {
   const supabase = await createClient()
   const { error } = await supabase
@@ -763,4 +778,18 @@ export async function linkTaxToLote(cashflowId: string, purchaseOrderId: string)
   if (error) throw new Error(`Erro: ${error.message}`)
   revalidatePath('/lotes')
   revalidatePath('/caixa')
+}
+
+export async function getSettings(): Promise<Setting[]> {
+  const supabase = await createClient()
+  const { data, error } = await supabase.from('settings').select('*').order('key')
+  if (error) throw new Error(`Erro: ${error.message}`)
+  return (data || []) as Setting[]
+}
+
+export async function updateSetting(key: string, value: string) {
+  const supabase = await createClient()
+  const { error } = await supabase.from('settings').update({ value }).eq('key', key)
+  if (error) throw new Error(`Erro: ${error.message}`)
+  revalidatePath('/configuracoes')
 }

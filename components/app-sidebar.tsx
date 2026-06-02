@@ -18,6 +18,7 @@ import {
   UserCircle,
   Archive,
   BarChart3,
+  Settings2,
 } from "lucide-react"
 
 const navigation = [
@@ -30,6 +31,7 @@ const navigation = [
   { name: "Clientes", href: "/clientes", icon: UserCircle },
   { name: "Lotes", href: "/lotes", icon: Archive },
   { name: "DRE", href: "/dre", icon: BarChart3 },
+  { name: "Configurações", href: "/configuracoes", icon: Settings2 },
 ]
 
 // Navegação simplificada para mobile (5 itens max para caber bem)

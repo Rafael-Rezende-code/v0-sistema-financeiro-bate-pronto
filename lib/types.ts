@@ -167,3 +167,10 @@ export const SALE_TYPE_LABELS: Record<SaleType, string> = {
 }
 
 export const SIZE_OPTIONS: SaleSize[] = ['P', 'M', 'G', 'GG', 'XG', '2XL', '3XL', '4XL']
+
+export interface Setting {
+  key: string
+  value: string
+  label: string | null
+  description: string | null
+}
