@@ -47,7 +47,7 @@ export default function VendasHistoricoPage() {
 
   const [sales, setSales] = useState<Sale[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedMonth, setSelectedMonth] = useState(defaultMonth)
+  const [selectedMonth, setSelectedMonth] = useState("all")
   const [filterType, setFilterType] = useState<SaleType | "all">("all")
 
   const monthOptions = getMonthOptions()
@@ -55,12 +55,17 @@ export default function VendasHistoricoPage() {
   const fetchSales = async (month: string) => {
     setLoading(true)
     try {
-      const [year, mon] = month.split("-")
-      const startDate = `${year}-${mon}-01`
-      const lastDay = new Date(Number(year), Number(mon), 0).getDate()
-      const endDate = `${year}-${mon}-${String(lastDay).padStart(2, "0")}`
-      const data = await getSales(startDate, endDate)
-      setSales(data)
+      if (month === "all") {
+        const data = await getSales()
+        setSales(data)
+      } else {
+        const [year, mon] = month.split("-")
+        const startDate = `${year}-${mon}-01`
+        const lastDay = new Date(Number(year), Number(mon), 0).getDate()
+        const endDate = `${year}-${mon}-${String(lastDay).padStart(2, "0")}`
+        const data = await getSales(startDate, endDate)
+        setSales(data)
+      }
     } finally {
       setLoading(false)
     }
@@ -93,6 +98,7 @@ export default function VendasHistoricoPage() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="all">Todos os períodos</SelectItem>
             {monthOptions.map((opt) => (
               <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
             ))}
