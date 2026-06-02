@@ -34,13 +34,15 @@ const navigation = [
   { name: "Configurações", href: "/configuracoes", icon: Settings2 },
 ]
 
-// Navegação simplificada para mobile (5 itens max para caber bem)
 const mobileNavigation = [
   { name: "Home", href: "/", icon: LayoutDashboard },
   { name: "Vender", href: "/vendas/nova", icon: ShoppingCart },
+  { name: "Histórico", href: "/vendas", icon: TrendingUp },
   { name: "Estoque", href: "/estoque", icon: Package },
   { name: "Caixa", href: "/caixa", icon: Wallet },
-  { name: "Sócios", href: "/retiradas", icon: Users },
+  { name: "Clientes", href: "/clientes", icon: UserCircle },
+  { name: "Lotes", href: "/lotes", icon: Archive },
+  { name: "DRE", href: "/dre", icon: BarChart3 },
 ]
 
 function ThemeToggle() {

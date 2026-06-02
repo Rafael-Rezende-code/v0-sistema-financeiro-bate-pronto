@@ -24,12 +24,14 @@ export interface PurchaseOrder {
   notes?: string | null
   tracking_code?: string | null
   items_description?: string | null
+  product_type?: ProductType | null
 }
 
 export interface PurchaseOrderWithCost extends PurchaseOrder {
   unit_cost_brl?: number | null
   min_price_40pct?: number | null
   min_price_45pct?: number | null
+  product_type?: ProductType | null
 }
 
 export interface Sale {

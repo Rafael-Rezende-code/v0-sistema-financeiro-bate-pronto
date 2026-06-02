@@ -687,6 +687,7 @@ export async function createPurchaseOrder(formData: FormData) {
   const notes = (formData.get("notes") as string) || null
   const tracking_code = (formData.get("tracking_code") as string) || null
   const items_description = (formData.get("items_description") as string) || null
+  const product_type = (formData.get("product_type") as string) || null
   const { error } = await supabase.from("purchase_orders").insert({
     quantity,
     purchase_amount_usd,
@@ -697,6 +698,7 @@ export async function createPurchaseOrder(formData: FormData) {
     notes,
     tracking_code,
     items_description,
+    product_type,
   })
   if (error) throw new Error(`Erro ao criar lote: ${error.message}`)
   revalidatePath("/lotes")
@@ -761,12 +763,30 @@ export async function updateLote(id: string, formData: FormData) {
   const items_description = (formData.get('items_description') as string) || null
   const supplier = (formData.get('supplier') as string) || null
   const notes = (formData.get('notes') as string) || null
+  const product_type = (formData.get('product_type') as string) || null
   const { error } = await supabase
     .from('purchase_orders')
-    .update({ arrival_date, tracking_code, items_description, supplier, notes })
+    .update({ arrival_date, tracking_code, items_description, supplier, notes, product_type })
     .eq('id', id)
   if (error) throw new Error(`Erro: ${error.message}`)
   revalidatePath('/lotes')
+}
+
+export async function updateSale(id: string, formData: FormData) {
+  const supabase = await createClient()
+  const channel = (formData.get('channel') as string) || null
+  const team = (formData.get('team') as string) || null
+  const size = (formData.get('size') as string) || null
+  const sale_type = (formData.get('sale_type') as string) || 'normal'
+  const customer_name = (formData.get('customer_name') as string) || null
+  const custom_price = formData.get('custom_price') as string
+  const { error } = await supabase
+    .from('sales')
+    .update({ channel, team, size, sale_type, customer_name,
+      ...(custom_price ? { final_price: Number(custom_price) } : {}) })
+    .eq('id', id)
+  if (error) throw new Error(`Erro: ${error.message}`)
+  revalidatePath('/vendas')
 }
 
 export async function linkTaxToLote(cashflowId: string, purchaseOrderId: string) {

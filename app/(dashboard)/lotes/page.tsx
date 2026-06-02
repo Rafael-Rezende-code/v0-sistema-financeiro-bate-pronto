@@ -45,6 +45,7 @@ export default function LotesPage() {
     notes: "",
     tracking_code: "",
     items_description: "",
+    product_type: "",
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
@@ -55,6 +56,7 @@ export default function LotesPage() {
     items_description: "",
     supplier: "",
     notes: "",
+    product_type: "",
   })
   const [isEditSubmitting, setIsEditSubmitting] = useState(false)
   const [unlinkedTaxes, setUnlinkedTaxes] = useState<any[]>([])
@@ -99,6 +101,7 @@ export default function LotesPage() {
       items_description: lote.items_description || "",
       supplier: lote.supplier || "",
       notes: lote.notes || "",
+      product_type: lote.product_type || "",
     })
     setIsEditDialogOpen(true)
   }
@@ -113,6 +116,7 @@ export default function LotesPage() {
       fd.set("items_description", editForm.items_description)
       fd.set("supplier", editForm.supplier)
       fd.set("notes", editForm.notes)
+      if (editForm.product_type) fd.set("product_type", editForm.product_type)
       await updateLote(editingLote.id, fd)
       setIsEditDialogOpen(false)
       await fetchLotes()
@@ -150,6 +154,7 @@ export default function LotesPage() {
       if (form.notes) fd.set("notes", form.notes)
       if (form.tracking_code) fd.set("tracking_code", form.tracking_code)
       if (form.items_description) fd.set("items_description", form.items_description)
+      if (form.product_type) fd.set("product_type", form.product_type)
       await createPurchaseOrder(fd)
       setIsDialogOpen(false)
       setForm({
@@ -162,6 +167,7 @@ export default function LotesPage() {
         notes: "",
         tracking_code: "",
         items_description: "",
+        product_type: "",
       })
       await fetchLotes()
     } catch (e) {
@@ -205,6 +211,11 @@ export default function LotesPage() {
                     {lote.quantity} peças
                   </CardTitle>
                   <div className="flex items-center gap-1.5">
+                    {lote.product_type && (
+                      <Badge variant="secondary" className="text-xs capitalize">
+                        {lote.product_type === 'retro' ? 'Retrô' : lote.product_type === 'jogador' ? 'Jogador' : 'Torcedor'}
+                      </Badge>
+                    )}
                     {lote.arrival_date && (
                       <Badge variant="outline" className="text-xs">
                         {formatDate(lote.arrival_date)}
@@ -439,6 +450,17 @@ export default function LotesPage() {
               </div>
             )}
             <div className="space-y-2">
+              <Label>Tipo de camisa</Label>
+              <Select value={form.product_type} onValueChange={(v) => setForm({ ...form, product_type: v })}>
+                <SelectTrigger className="h-10"><SelectValue placeholder="Selecione o tipo" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="torcedor">Torcedor</SelectItem>
+                  <SelectItem value="jogador">Jogador</SelectItem>
+                  <SelectItem value="retro">Retrô</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="supplier">Fornecedor</Label>
               <Input
                 id="supplier"
@@ -511,6 +533,17 @@ export default function LotesPage() {
                 value={editForm.arrival_date}
                 onChange={(e) => setEditForm({ ...editForm, arrival_date: e.target.value })}
               />
+            </div>
+            <div className="space-y-2">
+              <Label>Tipo de camisa</Label>
+              <Select value={editForm.product_type} onValueChange={(v) => setEditForm({ ...editForm, product_type: v })}>
+                <SelectTrigger className="h-10"><SelectValue placeholder="Selecione o tipo" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="torcedor">Torcedor</SelectItem>
+                  <SelectItem value="jogador">Jogador</SelectItem>
+                  <SelectItem value="retro">Retrô</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-supplier">Fornecedor</Label>

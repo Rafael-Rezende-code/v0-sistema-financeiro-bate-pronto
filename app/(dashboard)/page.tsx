@@ -84,6 +84,27 @@ export default async function DashboardPage() {
         />
       </div>
 
+      {/* Meta mensal */}
+      <Card className="mt-4">
+        <CardContent className="pt-4 pb-4">
+          <div className="flex justify-between text-sm mb-2">
+            <span className="font-medium">Meta do mês</span>
+            <span className="text-muted-foreground">
+              {formatCurrency(stats.totalRevenue)} / {formatCurrency(advancedStats.monthlyGoal)}
+            </span>
+          </div>
+          <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+            <div
+              className="h-full rounded-full bg-primary transition-all duration-500"
+              style={{ width: `${Math.min(advancedStats.monthlyProgress, 100)}%` }}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            {advancedStats.monthlyProgress.toFixed(0)}% da meta atingida
+          </p>
+        </CardContent>
+      </Card>
+
       {/* DRE do mês atual */}
       {dreData.length > 0 && (() => {
         const mesAtual = dreData[0]

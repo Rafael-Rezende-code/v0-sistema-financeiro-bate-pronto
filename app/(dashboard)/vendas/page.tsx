@@ -1,14 +1,17 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { getSales } from "../actions"
+import { getSales, deleteSale, updateSale } from "../actions"
 import type { Sale } from "@/lib/types"
 import { Card, CardContent } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { PRODUCT_CONFIG, CHANNEL_LABELS, SALE_TYPE_LABELS, type SaleType } from "@/lib/types"
-import { TrendingUp, DollarSign, Percent, Shirt } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { PRODUCT_CONFIG, CHANNEL_LABELS, SALE_TYPE_LABELS, SIZE_OPTIONS, type SaleType } from "@/lib/types"
+import { TrendingUp, DollarSign, Percent, Shirt, Pencil, Trash2 } from "lucide-react"
 import Link from "next/link"
 
 function formatCurrency(value: number) {
@@ -49,6 +52,9 @@ export default function VendasHistoricoPage() {
   const [loading, setLoading] = useState(true)
   const [selectedMonth, setSelectedMonth] = useState("all")
   const [filterType, setFilterType] = useState<SaleType | "all">("all")
+  const [editingSale, setEditingSale] = useState<Sale | null>(null)
+  const [editForm, setEditForm] = useState({ channel: "", team: "", size: "", sale_type: "normal", customer_name: "", custom_price: "" })
+  const [isEditSubmitting, setIsEditSubmitting] = useState(false)
 
   const monthOptions = getMonthOptions()
 
@@ -72,6 +78,49 @@ export default function VendasHistoricoPage() {
   }
 
   useEffect(() => { fetchSales(selectedMonth) }, [selectedMonth])
+
+  const openEdit = (sale: Sale) => {
+    setEditingSale(sale)
+    setEditForm({
+      channel: sale.channel || "",
+      team: sale.team || "",
+      size: sale.size || "",
+      sale_type: sale.sale_type || "normal",
+      customer_name: sale.customer_name || "",
+      custom_price: "",
+    })
+  }
+
+  const handleEditSubmit = async () => {
+    if (!editingSale) return
+    setIsEditSubmitting(true)
+    try {
+      const fd = new FormData()
+      fd.set("channel", editForm.channel)
+      fd.set("team", editForm.team)
+      fd.set("size", editForm.size)
+      fd.set("sale_type", editForm.sale_type)
+      fd.set("customer_name", editForm.customer_name)
+      if (editForm.custom_price) fd.set("custom_price", editForm.custom_price)
+      await updateSale(editingSale.id, fd)
+      setEditingSale(null)
+      await fetchSales(selectedMonth)
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setIsEditSubmitting(false)
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Excluir esta venda?")) return
+    try {
+      await deleteSale(id)
+      await fetchSales(selectedMonth)
+    } catch (e) {
+      console.error(e)
+    }
+  }
 
   const filtered = filterType === "all" ? sales : sales.filter((s) => s.sale_type === filterType)
 
@@ -206,10 +255,18 @@ export default function VendasHistoricoPage() {
                         )}
                       </div>
                     </div>
-                    <div className="text-right shrink-0">
+                    <div className="text-right shrink-0 flex flex-col items-end gap-1">
                       <p className="font-semibold text-sm">{formatCurrency(Number(sale.final_price))}</p>
                       <p className="text-xs text-green-600">+{formatCurrency(Number(sale.profit))}</p>
                       <p className="text-[10px] text-muted-foreground">{margin.toFixed(0)}%</p>
+                      <div className="flex gap-1 mt-1">
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(sale)}>
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => handleDelete(sale.id)}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
@@ -218,6 +275,67 @@ export default function VendasHistoricoPage() {
           })}
         </div>
       )}
+
+      <Dialog open={!!editingSale} onOpenChange={(open) => { if (!open) setEditingSale(null) }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Venda</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Canal</Label>
+              <Select value={editForm.channel} onValueChange={(v) => setEditForm({ ...editForm, channel: v })}>
+                <SelectTrigger className="h-10"><SelectValue placeholder="Canal de venda" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Nenhum</SelectItem>
+                  {(Object.entries(CHANNEL_LABELS) as [string, string][]).map(([k, v]) => (
+                    <SelectItem key={k} value={k}>{v}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Time</Label>
+              <Input value={editForm.team} onChange={(e) => setEditForm({ ...editForm, team: e.target.value })} placeholder="Ex: Flamengo" />
+            </div>
+            <div className="space-y-2">
+              <Label>Tamanho</Label>
+              <Select value={editForm.size} onValueChange={(v) => setEditForm({ ...editForm, size: v })}>
+                <SelectTrigger className="h-10"><SelectValue placeholder="Tamanho" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Nenhum</SelectItem>
+                  {SIZE_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Tipo de venda</Label>
+              <Select value={editForm.sale_type} onValueChange={(v) => setEditForm({ ...editForm, sale_type: v })}>
+                <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {(Object.entries(SALE_TYPE_LABELS) as [string, string][]).map(([k, v]) => (
+                    <SelectItem key={k} value={k}>{v}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Nome do cliente</Label>
+              <Input value={editForm.customer_name} onChange={(e) => setEditForm({ ...editForm, customer_name: e.target.value })} placeholder="Nome do cliente" />
+            </div>
+            <div className="space-y-2">
+              <Label>Preço personalizado (opcional)</Label>
+              <Input type="number" value={editForm.custom_price} onChange={(e) => setEditForm({ ...editForm, custom_price: e.target.value })} placeholder="Deixe em branco para manter" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingSale(null)}>Cancelar</Button>
+            <Button onClick={handleEditSubmit} disabled={isEditSubmitting}>
+              {isEditSubmitting ? "Salvando..." : "Salvar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
