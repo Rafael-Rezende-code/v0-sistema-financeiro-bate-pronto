@@ -737,3 +737,26 @@ export async function getCustomersWithStats() {
   if (error) throw new Error(`Erro ao buscar clientes: ${error.message}`)
   return data || []
 }
+
+export async function getUnlinkedTaxes() {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('cashflow')
+    .select('id, date, description, amount')
+    .eq('category', 'imposto_importacao')
+    .is('purchase_order_id', null)
+    .order('date', { ascending: false })
+  if (error) throw new Error(`Erro: ${error.message}`)
+  return data || []
+}
+
+export async function linkTaxToLote(cashflowId: string, purchaseOrderId: string) {
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('cashflow')
+    .update({ purchase_order_id: purchaseOrderId })
+    .eq('id', cashflowId)
+  if (error) throw new Error(`Erro: ${error.message}`)
+  revalidatePath('/lotes')
+  revalidatePath('/caixa')
+}

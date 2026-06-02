@@ -1,14 +1,14 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { createSale } from "../../actions"
-import { PRODUCT_CONFIG, PERSONALIZATION_PRICE, CHANNEL_LABELS, SALE_TYPE_LABELS, SIZE_OPTIONS, type ProductType, type SaleChannel, type SaleType, type SaleSize } from "@/lib/types"
+import { createSale, getCustomers } from "../../actions"
+import { PRODUCT_CONFIG, PERSONALIZATION_PRICE, CHANNEL_LABELS, SALE_TYPE_LABELS, SIZE_OPTIONS, type ProductType, type SaleChannel, type SaleType, type SaleSize, type Customer } from "@/lib/types"
 import { ShoppingCart, Shirt, Check } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -35,8 +35,14 @@ export default function NovaVendaPage() {
   const [team, setTeam] = useState("")
   const [size, setSize] = useState<SaleSize | "">("")
   const [saleType, setSaleType] = useState<SaleType | "">("")
+  const [customers, setCustomers] = useState<Customer[]>([])
+  const [selectedCustomerId, setSelectedCustomerId] = useState("__none__")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
+
+  useEffect(() => {
+    getCustomers().then(setCustomers).catch(console.error)
+  }, [])
 
   const calculatePrice = () => {
     if (!selectedProduct) return { price: 0, cost: 0, profit: 0 }
@@ -83,6 +89,7 @@ export default function NovaVendaPage() {
       if (team) formData.set("team", team)
       if (size) formData.set("size", size)
       if (saleType) formData.set("sale_type", saleType)
+      if (selectedCustomerId && selectedCustomerId !== "__none__") formData.set("customer_id", selectedCustomerId)
 
       await createSale(formData)
       setSuccess(true)
@@ -97,6 +104,7 @@ export default function NovaVendaPage() {
         setTeam("")
         setSize("")
         setSaleType("")
+        setSelectedCustomerId("__none__")
         setSuccess(false)
       }, 2000)
     } catch (error) {
@@ -239,6 +247,34 @@ export default function NovaVendaPage() {
                   checked={personalized}
                   onCheckedChange={setPersonalized}
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm">Cliente Cadastrado</Label>
+                <Select
+                  value={selectedCustomerId}
+                  onValueChange={(v) => {
+                    setSelectedCustomerId(v)
+                    if (v !== "__none__") {
+                      const c = customers.find((c) => c.id === v)
+                      if (c) setCustomerName(c.name)
+                    } else {
+                      setCustomerName("")
+                    }
+                  }}
+                >
+                  <SelectTrigger className="h-10 md:h-11">
+                    <SelectValue placeholder="Cliente não cadastrado" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">Cliente não cadastrado</SelectItem>
+                    {customers.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name}{c.team_1 ? ` — ${c.team_1}` : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">

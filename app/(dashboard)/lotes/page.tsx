@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { getPurchaseOrders, createPurchaseOrder } from "../actions"
+import { getPurchaseOrders, createPurchaseOrder, getUnlinkedTaxes, linkTaxToLote } from "../actions"
 import type { PurchaseOrderWithCost } from "@/lib/types"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
   Dialog,
   DialogContent,
@@ -16,7 +17,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog"
-import { Package, Plus, Calculator } from "lucide-react"
+import { Package, Plus, Calculator, Link2 } from "lucide-react"
 
 function formatBRL(value: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value)
@@ -44,17 +45,39 @@ export default function LotesPage() {
     notes: "",
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [unlinkedTaxes, setUnlinkedTaxes] = useState<any[]>([])
+  const [taxLoteMap, setTaxLoteMap] = useState<Record<string, string>>({})
+  const [linkingId, setLinkingId] = useState<string | null>(null)
 
   const fetchLotes = async () => {
     try {
-      const data = await getPurchaseOrders()
-      setLotes(data)
+      const [lotesData, taxesData] = await Promise.all([
+        getPurchaseOrders(),
+        getUnlinkedTaxes(),
+      ])
+      setLotes(lotesData)
+      setUnlinkedTaxes(taxesData)
     } finally {
       setLoading(false)
     }
   }
 
   useEffect(() => { fetchLotes() }, [])
+
+  const handleLinkTax = async (cashflowId: string) => {
+    const purchaseOrderId = taxLoteMap[cashflowId]
+    if (!purchaseOrderId) return
+    setLinkingId(cashflowId)
+    try {
+      await linkTaxToLote(cashflowId, purchaseOrderId)
+      setTaxLoteMap((prev) => { const next = { ...prev }; delete next[cashflowId]; return next })
+      await fetchLotes()
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setLinkingId(null)
+    }
+  }
 
   const computedBRL =
     form.purchase_amount_usd && form.exchange_rate
@@ -196,6 +219,57 @@ export default function LotesPage() {
               </CardContent>
             </Card>
           ))}
+        </div>
+      )}
+
+      {unlinkedTaxes.length > 0 && (
+        <div className="mt-8">
+          <div className="mb-4 flex items-center gap-2">
+            <Link2 className="h-4 w-4 text-amber-600" />
+            <h2 className="text-base font-semibold text-amber-600">Impostos não vinculados</h2>
+          </div>
+          <div className="space-y-3">
+            {unlinkedTaxes.map((tax) => (
+              <Card key={tax.id} className="border-amber-200 dark:border-amber-800">
+                <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">
+                      {tax.description || 'Imposto de importação'}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatDate(tax.date)} · {formatBRL(Number(tax.amount))}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Select
+                      value={taxLoteMap[tax.id] || ""}
+                      onValueChange={(v) => setTaxLoteMap({ ...taxLoteMap, [tax.id]: v })}
+                    >
+                      <SelectTrigger className="w-52 h-9 text-xs">
+                        <SelectValue placeholder="Selecione o lote" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {lotes.map((lote) => (
+                          <SelectItem key={lote.id} value={lote.id} className="text-xs">
+                            {lote.quantity} peças
+                            {lote.supplier ? ` — ${lote.supplier}` : ''}
+                            {lote.arrival_date ? ` (${formatDate(lote.arrival_date)})` : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      size="sm"
+                      disabled={!taxLoteMap[tax.id] || linkingId === tax.id}
+                      onClick={() => handleLinkTax(tax.id)}
+                    >
+                      {linkingId === tax.id ? 'Vinculando...' : 'Vincular'}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       )}
 
