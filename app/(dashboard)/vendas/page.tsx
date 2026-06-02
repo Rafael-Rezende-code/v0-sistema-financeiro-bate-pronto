@@ -143,7 +143,7 @@ export default function VendasHistoricoPage() {
       {/* Filtros */}
       <div className="flex flex-wrap gap-3 mb-6">
         <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-          <SelectTrigger className="w-52">
+          <SelectTrigger className="w-full sm:w-52">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -155,7 +155,7 @@ export default function VendasHistoricoPage() {
         </Select>
 
         <Select value={filterType} onValueChange={(v) => setFilterType(v as SaleType | "all")}>
-          <SelectTrigger className="w-44">
+          <SelectTrigger className="w-full sm:w-44">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -168,15 +168,15 @@ export default function VendasHistoricoPage() {
       </div>
 
       {/* Resumo do período */}
-      <div className="grid grid-cols-3 gap-3 mb-6">
+      <div className="grid grid-cols-1 gap-3 mb-6 sm:grid-cols-3">
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 shrink-0">
               <DollarSign className="h-4 w-4 text-primary" />
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="text-xs text-muted-foreground">Faturamento</p>
-              <p className="font-bold text-sm">{formatCurrency(totalRevenue)}</p>
+              <p className="font-bold text-sm truncate">{formatCurrency(totalRevenue)}</p>
               <p className="text-[10px] text-muted-foreground">{filtered.length} vendas</p>
             </div>
           </CardContent>
@@ -186,9 +186,9 @@ export default function VendasHistoricoPage() {
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-green-100 dark:bg-green-900 shrink-0">
               <TrendingUp className="h-4 w-4 text-green-600" />
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="text-xs text-muted-foreground">Lucro</p>
-              <p className="font-bold text-sm text-green-600">{formatCurrency(totalProfit)}</p>
+              <p className="font-bold text-sm text-green-600 truncate">{formatCurrency(totalProfit)}</p>
             </div>
           </CardContent>
         </Card>
@@ -197,7 +197,7 @@ export default function VendasHistoricoPage() {
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900 shrink-0">
               <Percent className="h-4 w-4 text-blue-600" />
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="text-xs text-muted-foreground">Margem média</p>
               <p className="font-bold text-sm">{avgMargin.toFixed(1)}%</p>
             </div>

@@ -87,9 +87,9 @@ export default async function DashboardPage() {
       {/* Meta mensal */}
       <Card className="mt-4">
         <CardContent className="pt-4 pb-4">
-          <div className="flex justify-between text-sm mb-2">
-            <span className="font-medium">Meta do mês</span>
-            <span className="text-muted-foreground">
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <span className="text-sm font-medium shrink-0">Meta do mês</span>
+            <span className="text-xs text-muted-foreground truncate text-right">
               {formatCurrency(stats.totalRevenue)} / {formatCurrency(advancedStats.monthlyGoal)}
             </span>
           </div>

@@ -130,17 +130,17 @@ function MobileBottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 md:hidden safe-area-bottom">
-      <div className="flex h-16 items-center justify-around px-2">
+      <div className="flex h-16 items-center gap-1 px-1 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {mobileNavigation.map((item) => {
-          const isActive = pathname === item.href || 
+          const isActive = pathname === item.href ||
             (item.href !== "/" && pathname.startsWith(item.href))
-          
+
           return (
             <Link
               key={item.name}
               href={item.href}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 rounded-lg px-3 py-2 transition-colors",
+                "flex shrink-0 flex-col items-center justify-center gap-1 rounded-lg px-3 py-2 transition-colors",
                 isActive
                   ? "text-primary"
                   : "text-muted-foreground"
@@ -154,7 +154,7 @@ function MobileBottomNav() {
         {/* Theme Toggle no mobile */}
         <button
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          className="flex flex-col items-center justify-center gap-1 rounded-lg px-3 py-2 text-muted-foreground transition-colors"
+          className="flex shrink-0 flex-col items-center justify-center gap-1 rounded-lg px-3 py-2 text-muted-foreground transition-colors"
         >
           <div className="relative h-5 w-5">
             <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
