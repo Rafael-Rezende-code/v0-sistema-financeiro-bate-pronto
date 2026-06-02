@@ -22,6 +22,8 @@ export interface PurchaseOrder {
   purchase_amount_brl?: number | null
   supplier?: string | null
   notes?: string | null
+  tracking_code?: string | null
+  items_description?: string | null
 }
 
 export interface PurchaseOrderWithCost extends PurchaseOrder {

@@ -685,6 +685,8 @@ export async function createPurchaseOrder(formData: FormData) {
     : purchase_amount_usd * exchange_rate
   const supplier = (formData.get("supplier") as string) || null
   const notes = (formData.get("notes") as string) || null
+  const tracking_code = (formData.get("tracking_code") as string) || null
+  const items_description = (formData.get("items_description") as string) || null
   const { error } = await supabase.from("purchase_orders").insert({
     quantity,
     purchase_amount_usd,
@@ -693,6 +695,8 @@ export async function createPurchaseOrder(formData: FormData) {
     purchase_amount_brl,
     supplier,
     notes,
+    tracking_code,
+    items_description,
   })
   if (error) throw new Error(`Erro ao criar lote: ${error.message}`)
   revalidatePath("/lotes")

@@ -17,7 +17,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog"
-import { Package, Plus, Calculator, Link2 } from "lucide-react"
+import { Package, Plus, Calculator, Link2, MapPin, ListChecks } from "lucide-react"
 
 function formatBRL(value: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value)
@@ -43,6 +43,8 @@ export default function LotesPage() {
     purchase_amount_brl: "",
     supplier: "",
     notes: "",
+    tracking_code: "",
+    items_description: "",
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [unlinkedTaxes, setUnlinkedTaxes] = useState<any[]>([])
@@ -104,6 +106,8 @@ export default function LotesPage() {
       else if (computedBRL) fd.set("purchase_amount_brl", computedBRL)
       if (form.supplier) fd.set("supplier", form.supplier)
       if (form.notes) fd.set("notes", form.notes)
+      if (form.tracking_code) fd.set("tracking_code", form.tracking_code)
+      if (form.items_description) fd.set("items_description", form.items_description)
       await createPurchaseOrder(fd)
       setIsDialogOpen(false)
       setForm({
@@ -114,6 +118,8 @@ export default function LotesPage() {
         purchase_amount_brl: "",
         supplier: "",
         notes: "",
+        tracking_code: "",
+        items_description: "",
       })
       await fetchLotes()
     } catch (e) {
@@ -165,6 +171,12 @@ export default function LotesPage() {
                 {lote.supplier && (
                   <p className="text-xs text-muted-foreground">{lote.supplier}</p>
                 )}
+                {lote.tracking_code && (
+                  <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                    <MapPin className="h-3 w-3 shrink-0" />
+                    {lote.tracking_code}
+                  </p>
+                )}
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="grid grid-cols-2 gap-2 text-sm">
@@ -209,6 +221,14 @@ export default function LotesPage() {
                         </div>
                       )}
                     </div>
+                  </div>
+                )}
+                {lote.items_description && (
+                  <div className="border-t pt-2">
+                    <p className="text-xs text-muted-foreground flex items-start gap-1">
+                      <ListChecks className="h-3 w-3 shrink-0 mt-0.5" />
+                      <span className="line-clamp-3">{lote.items_description}</span>
+                    </p>
                   </div>
                 )}
                 {lote.notes && (
@@ -382,6 +402,26 @@ export default function LotesPage() {
                 value={form.notes}
                 onChange={(e) => setForm({ ...form, notes: e.target.value })}
                 placeholder="Notas sobre o lote"
+                rows={3}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="tracking_code">Código de rastreio</Label>
+              <Input
+                id="tracking_code"
+                value={form.tracking_code}
+                onChange={(e) => setForm({ ...form, tracking_code: e.target.value })}
+                placeholder="Ex: LZ415128335CN"
+                className="h-10"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="items_description">Itens do lote</Label>
+              <Textarea
+                id="items_description"
+                value={form.items_description}
+                onChange={(e) => setForm({ ...form, items_description: e.target.value })}
+                placeholder="Ex: Brasil jogador G (João), Corinthians torcedor M (Mateus)..."
                 rows={3}
               />
             </div>
