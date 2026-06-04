@@ -1,14 +1,11 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { getInventory, addInventoryPurchase, adjustInventoryQuantity } from "../actions"
-import { PRODUCT_CONFIG, type ProductType, type Inventory } from "@/lib/types"
-import { Package, Plus, Minus, Shirt, Check } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { Badge } from "@/components/ui/badge"
 import {
   Dialog,
   DialogContent,
@@ -17,249 +14,382 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
+  getInventoryItems,
+  addInventoryItem,
+  updateInventoryItemStatus,
+  deleteInventoryItem,
+} from "../actions"
+import { Plus, Trash2, ArrowLeftRight, Package, Truck, DollarSign } from "lucide-react"
+
+interface InventoryItem {
+  id: string
+  product_type: string
+  team: string | null
+  size: string | null
+  personalized: boolean
+  status: string
+  sale_price: number | null
+  notes: string | null
+  created_at: string
+}
+
+const PRODUCT_LABELS: Record<string, string> = {
+  torcedor: "Torcedor",
+  jogador: "Jogador",
+  retro: "Retrô",
+}
 
 function formatCurrency(value: number) {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(value)
+  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value)
+}
+
+function StatusBadge({ status }: { status: string }) {
+  if (status === "em_maos")
+    return <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-0">Em Mãos</Badge>
+  if (status === "a_caminho")
+    return <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-0">A Caminho</Badge>
+  return <Badge variant="secondary">Vendida</Badge>
+}
+
+function ItemCard({
+  item,
+  onToggle,
+  onDelete,
+}: {
+  item: InventoryItem
+  onToggle: (id: string, status: string) => Promise<void>
+  onDelete: (id: string) => Promise<void>
+}) {
+  return (
+    <Card>
+      <CardContent className="pt-4 pb-3 px-4">
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-semibold text-sm">
+              {PRODUCT_LABELS[item.product_type] ?? item.product_type}
+            </span>
+            {item.team && (
+              <span className="text-xs text-muted-foreground">{item.team}</span>
+            )}
+            {item.size && (
+              <Badge variant="outline" className="text-xs">{item.size}</Badge>
+            )}
+            {item.personalized && (
+              <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-100 border-0 text-xs">
+                Personalizada
+              </Badge>
+            )}
+          </div>
+          <StatusBadge status={item.status} />
+        </div>
+
+        {item.sale_price != null && (
+          <p className="text-sm font-medium text-green-700 mb-1">
+            {formatCurrency(item.sale_price)}
+          </p>
+        )}
+        {item.notes && (
+          <p className="text-xs text-muted-foreground mb-2 italic">{item.notes}</p>
+        )}
+
+        <div className="flex gap-2 mt-3">
+          {item.status !== "vendida" && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 text-xs h-8"
+              onClick={() => onToggle(item.id, item.status)}
+            >
+              <ArrowLeftRight className="h-3 w-3 mr-1" />
+              {item.status === "em_maos" ? "→ A Caminho" : "→ Em Mãos"}
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-destructive hover:text-destructive h-8 w-8 p-0"
+            onClick={() => onDelete(item.id)}
+          >
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  )
 }
 
 export default function EstoquePage() {
-  const [inventory, setInventory] = useState<Inventory[]>([])
-  const [selectedProduct, setSelectedProduct] = useState<ProductType | null>(null)
-  const [quantity, setQuantity] = useState("")
-  const [totalCost, setTotalCost] = useState("")
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [items, setItems] = useState<InventoryItem[]>([])
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [productType, setProductType] = useState("torcedor")
+  const [team, setTeam] = useState("")
+  const [size, setSize] = useState("")
+  const [personalized, setPersonalized] = useState("false")
+  const [status, setStatus] = useState("em_maos")
+  const [salePrice, setSalePrice] = useState("")
+  const [notes, setNotes] = useState("")
 
   useEffect(() => {
-    loadInventory()
+    loadItems()
   }, [])
 
-  const loadInventory = async () => {
-    const data = await getInventory()
-    setInventory(data)
+  const loadItems = async () => {
+    const data = await getInventoryItems()
+    setItems(data as InventoryItem[])
   }
 
-  const handleSubmit = async () => {
-    if (!selectedProduct || !quantity || !totalCost) return
-    
+  const handleAdd = async () => {
     setIsSubmitting(true)
-    
     try {
-      await addInventoryPurchase(
-        selectedProduct,
-        Number(quantity),
-        Number(totalCost)
-      )
-      await loadInventory()
-      setSelectedProduct(null)
-      setQuantity("")
-      setTotalCost("")
+      const formData = new FormData()
+      formData.set("product_type", productType)
+      formData.set("team", team)
+      formData.set("size", size)
+      formData.set("personalized", personalized)
+      formData.set("status", status)
+      if (salePrice) formData.set("sale_price", salePrice)
+      formData.set("notes", notes)
+      await addInventoryItem(formData)
+      await loadItems()
       setDialogOpen(false)
+      setProductType("torcedor")
+      setTeam("")
+      setSize("")
+      setPersonalized("false")
+      setStatus("em_maos")
+      setSalePrice("")
+      setNotes("")
     } catch (error) {
-      console.error("Erro ao registrar compra:", error)
+      console.error(error)
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  const unitCost = quantity && totalCost 
-    ? Number(totalCost) / Number(quantity) 
-    : 0
+  const handleToggle = async (id: string, currentStatus: string) => {
+    const next = currentStatus === "em_maos" ? "a_caminho" : "em_maos"
+    await updateInventoryItemStatus(id, next)
+    await loadItems()
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Excluir esta peça?")) return
+    await deleteInventoryItem(id)
+    await loadItems()
+  }
+
+  const emMaos = items.filter((i) => i.status === "em_maos")
+  const aCaminho = items.filter((i) => i.status === "a_caminho")
+  const valorPotencial = emMaos.reduce((sum, i) => sum + (i.sale_price ?? 0), 0)
 
   return (
     <div className="p-4 md:p-8">
       <div className="mb-6 md:mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Estoque</h1>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Estoque por Peça</h1>
           <p className="text-sm md:text-base text-muted-foreground">
-            Gerencie o estoque de camisas
+            Peças individuais em mãos e a caminho
           </p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button className="w-full sm:w-auto">
               <Plus className="mr-2 h-4 w-4" />
-              Registrar Compra
+              Nova Peça
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-md mx-4 sm:mx-auto">
             <DialogHeader>
-              <DialogTitle>Registrar Compra de Estoque</DialogTitle>
+              <DialogTitle>Adicionar Peça</DialogTitle>
               <DialogDescription>
-                Adicione novas camisas ao estoque
+                Cadastre uma nova peça no estoque individual
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 md:space-y-6 py-4">
-              <div className="space-y-3">
-                <Label>Tipo de Camisa</Label>
-                <div className="grid gap-2 md:gap-3 grid-cols-3">
-                  {(Object.keys(PRODUCT_CONFIG) as ProductType[]).map((type) => {
-                    const config = PRODUCT_CONFIG[type]
-                    const isSelected = selectedProduct === type
-                    
-                    return (
-                      <button
-                        key={type}
-                        onClick={() => setSelectedProduct(type)}
-                        className={cn(
-                          "relative flex flex-col items-center rounded-lg border-2 p-2 md:p-4 transition-all hover:border-primary/50",
-                          isSelected
-                            ? "border-primary bg-primary/5"
-                            : "border-border"
-                        )}
-                      >
-                        {isSelected && (
-                          <div className="absolute -right-1 -top-1 md:-right-1.5 md:-top-1.5 flex h-4 w-4 md:h-5 md:w-5 items-center justify-center rounded-full bg-primary">
-                            <Check className="h-2.5 w-2.5 md:h-3 md:w-3 text-primary-foreground" />
-                          </div>
-                        )}
-                        <Shirt className="h-4 w-4 md:h-5 md:w-5 text-primary mb-1" />
-                        <span className="text-[10px] md:text-sm font-medium text-center">{config.label}</span>
-                      </button>
-                    )
-                  })}
+            <div className="space-y-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Tipo</Label>
+                  <Select value={productType} onValueChange={setProductType}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="torcedor">Torcedor</SelectItem>
+                      <SelectItem value="jogador">Jogador</SelectItem>
+                      <SelectItem value="retro">Retrô</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Status</Label>
+                  <Select value={status} onValueChange={setStatus}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="em_maos">Em Mãos</SelectItem>
+                      <SelectItem value="a_caminho">A Caminho</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
-              <div className="grid gap-3 md:gap-4 grid-cols-2">
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="quantity" className="text-sm">Quantidade</Label>
+                  <Label htmlFor="team">Time</Label>
                   <Input
-                    id="quantity"
-                    type="number"
-                    placeholder="Ex: 10"
-                    value={quantity}
-                    onChange={(e) => setQuantity(e.target.value)}
-                    className="h-10"
+                    id="team"
+                    placeholder="Ex: Flamengo"
+                    value={team}
+                    onChange={(e) => setTeam(e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="totalCost" className="text-sm">Custo Total (R$)</Label>
+                  <Label htmlFor="size">Tamanho</Label>
                   <Input
-                    id="totalCost"
-                    type="number"
-                    placeholder="Ex: 830"
-                    value={totalCost}
-                    onChange={(e) => setTotalCost(e.target.value)}
-                    className="h-10"
+                    id="size"
+                    placeholder="Ex: G, GG"
+                    value={size}
+                    onChange={(e) => setSize(e.target.value)}
                   />
                 </div>
               </div>
 
-              {quantity && totalCost && (
-                <div className="rounded-lg bg-muted p-3 md:p-4">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Custo unitário:</span>
-                    <span className="font-medium">{formatCurrency(unitCost)}</span>
-                  </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Personalizada</Label>
+                  <Select value={personalized} onValueChange={setPersonalized}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="false">Não</SelectItem>
+                      <SelectItem value="true">Sim</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-              )}
+                <div className="space-y-2">
+                  <Label htmlFor="salePrice">Preço (R$)</Label>
+                  <Input
+                    id="salePrice"
+                    type="number"
+                    placeholder="Ex: 120"
+                    value={salePrice}
+                    onChange={(e) => setSalePrice(e.target.value)}
+                  />
+                </div>
+              </div>
 
-              <Button
-                onClick={handleSubmit}
-                disabled={!selectedProduct || !quantity || !totalCost || isSubmitting}
-                className="w-full h-10 md:h-11"
-              >
-                {isSubmitting ? "Registrando..." : "Registrar Compra"}
+              <div className="space-y-2">
+                <Label htmlFor="notes">Observações</Label>
+                <Input
+                  id="notes"
+                  placeholder="Ex: para cliente João"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                />
+              </div>
+
+              <Button onClick={handleAdd} disabled={isSubmitting} className="w-full">
+                {isSubmitting ? "Salvando..." : "Adicionar Peça"}
               </Button>
             </div>
           </DialogContent>
         </Dialog>
       </div>
 
-      <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-3">
-        {(Object.keys(PRODUCT_CONFIG) as ProductType[]).map((type) => {
-          const config = PRODUCT_CONFIG[type]
-          const item = inventory.find(i => i.product_type === type)
-          const qty = item?.quantity || 0
-          const avgCost = item?.avg_cost || config.baseCost
+      {/* Resumo */}
+      <div className="grid grid-cols-3 gap-3 md:gap-4 mb-6 md:mb-8">
+        <Card>
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Package className="h-4 w-4 text-green-600" />
+              <span className="text-xs text-muted-foreground">Em Mãos</span>
+            </div>
+            <p className="text-2xl font-bold text-green-700">{emMaos.length}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Truck className="h-4 w-4 text-blue-600" />
+              <span className="text-xs text-muted-foreground">A Caminho</span>
+            </div>
+            <p className="text-2xl font-bold text-blue-700">{aCaminho.length}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-center gap-2 mb-1">
+              <DollarSign className="h-4 w-4 text-primary" />
+              <span className="text-xs text-muted-foreground">Valor Potencial</span>
+            </div>
+            <p className="text-base md:text-xl font-bold">{formatCurrency(valorPotencial)}</p>
+          </CardContent>
+        </Card>
+      </div>
 
-          return (
-            <Card key={type}>
-              <CardHeader className="pb-3 md:pb-6">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2 text-base md:text-lg">
-                    <div className="rounded-lg bg-primary/10 p-1.5 md:p-2">
-                      <Shirt className="h-4 w-4 md:h-5 md:w-5 text-primary" />
-                    </div>
-                    {config.label}
-                  </CardTitle>
-                </div>
-                <CardDescription className="text-xs md:text-sm">
-                  Preço de venda: {formatCurrency(config.basePrice)}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3 md:space-y-4">
-                  <div className="flex items-center justify-between rounded-lg border bg-muted/50 p-3 md:p-4">
-                    <div className="flex items-center gap-2 md:gap-3">
-                      <Package className="h-4 w-4 md:h-5 md:w-5 text-muted-foreground" />
-                      <span className="text-xs md:text-sm text-muted-foreground">Qtd</span>
-                    </div>
-                    <div className="flex items-center gap-2 md:gap-3">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-7 w-7 md:h-8 md:w-8"
-                        disabled={qty === 0}
-                        onClick={async () => {
-                          await adjustInventoryQuantity(type, -1)
-                          await loadInventory()
-                        }}
-                      >
-                        <Minus className="h-3 w-3 md:h-4 md:w-4" />
-                      </Button>
-                      <span className={cn(
-                        "text-xl md:text-2xl font-bold min-w-[2.5ch] text-center",
-                        qty === 0 && "text-destructive",
-                        qty > 0 && qty <= 5 && "text-yellow-600",
-                        qty > 5 && "text-green-600"
-                      )}>
-                        {qty}
-                      </span>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-7 w-7 md:h-8 md:w-8"
-                        onClick={async () => {
-                          await adjustInventoryQuantity(type, 1)
-                          await loadInventory()
-                        }}
-                      >
-                        <Plus className="h-3 w-3 md:h-4 md:w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-2 md:gap-3 text-xs md:text-sm">
-                    <div className="rounded-lg border p-2 md:p-3">
-                      <p className="text-muted-foreground text-[10px] md:text-xs">Custo Médio</p>
-                      <p className="text-base md:text-lg font-semibold">{formatCurrency(avgCost)}</p>
-                    </div>
-                    <div className="rounded-lg border p-2 md:p-3">
-                      <p className="text-muted-foreground text-[10px] md:text-xs">Valor Total</p>
-                      <p className="text-base md:text-lg font-semibold">{formatCurrency(qty * avgCost)}</p>
-                    </div>
-                  </div>
+      {/* Em Mãos */}
+      <div className="mb-8">
+        <div className="flex items-center gap-2 mb-4">
+          <Package className="h-5 w-5 text-green-600" />
+          <h2 className="text-lg font-semibold">Em Mãos</h2>
+          <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-0">
+            {emMaos.length}
+          </Badge>
+        </div>
+        {emMaos.length === 0 ? (
+          <div className="rounded-lg border border-dashed p-8 text-center text-muted-foreground text-sm">
+            Nenhuma peça em mãos
+          </div>
+        ) : (
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+            {emMaos.map((item) => (
+              <ItemCard
+                key={item.id}
+                item={item}
+                onToggle={handleToggle}
+                onDelete={handleDelete}
+              />
+            ))}
+          </div>
+        )}
+      </div>
 
-                  {qty === 0 && (
-                    <div className="rounded-lg bg-destructive/10 p-2 md:p-3 text-center text-xs md:text-sm text-destructive">
-                      Estoque zerado
-                    </div>
-                  )}
-                  {qty > 0 && qty <= 5 && (
-                    <div className="rounded-lg bg-yellow-100 p-2 md:p-3 text-center text-xs md:text-sm text-yellow-700">
-                      Estoque baixo
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )
-        })}
+      {/* A Caminho */}
+      <div>
+        <div className="flex items-center gap-2 mb-4">
+          <Truck className="h-5 w-5 text-blue-600" />
+          <h2 className="text-lg font-semibold">A Caminho</h2>
+          <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-0">
+            {aCaminho.length}
+          </Badge>
+        </div>
+        {aCaminho.length === 0 ? (
+          <div className="rounded-lg border border-dashed p-8 text-center text-muted-foreground text-sm">
+            Nenhuma peça a caminho
+          </div>
+        ) : (
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+            {aCaminho.map((item) => (
+              <ItemCard
+                key={item.id}
+                item={item}
+                onToggle={handleToggle}
+                onDelete={handleDelete}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )

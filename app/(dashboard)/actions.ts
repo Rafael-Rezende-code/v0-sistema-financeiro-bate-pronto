@@ -813,3 +813,51 @@ export async function updateSetting(key: string, value: string) {
   if (error) throw new Error(`Erro: ${error.message}`)
   revalidatePath('/configuracoes')
 }
+
+export async function getInventoryItems() {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('inventory_items')
+    .select('*')
+    .order('status', { ascending: true })
+    .order('product_type', { ascending: true })
+  if (error) throw new Error(`Erro: ${error.message}`)
+  return data || []
+}
+
+export async function updateInventoryItemStatus(id: string, status: string) {
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('inventory_items')
+    .update({ status })
+    .eq('id', id)
+  if (error) throw new Error(`Erro: ${error.message}`)
+  revalidatePath('/estoque')
+}
+
+export async function addInventoryItem(formData: FormData) {
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('inventory_items')
+    .insert({
+      product_type: formData.get('product_type') as string,
+      team: (formData.get('team') as string) || null,
+      size: (formData.get('size') as string) || null,
+      personalized: formData.get('personalized') === 'true',
+      status: (formData.get('status') as string) || 'em_maos',
+      sale_price: formData.get('sale_price') ? Number(formData.get('sale_price')) : null,
+      notes: (formData.get('notes') as string) || null,
+    })
+  if (error) throw new Error(`Erro: ${error.message}`)
+  revalidatePath('/estoque')
+}
+
+export async function deleteInventoryItem(id: string) {
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('inventory_items')
+    .delete()
+    .eq('id', id)
+  if (error) throw new Error(`Erro: ${error.message}`)
+  revalidatePath('/estoque')
+}
