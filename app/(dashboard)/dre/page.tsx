@@ -32,7 +32,7 @@ export default async function DREPage() {
         <div className="space-y-4">
           {dre.map((mes: any, index: number) => {
             const anterior = dre[index + 1]
-            const crescimento = anterior
+            const crescimento = anterior && Math.abs(Number(anterior.lucro_liquido_estimado)) > 50
               ? ((Number(mes.lucro_liquido_estimado) - Number(anterior.lucro_liquido_estimado)) / Math.abs(Number(anterior.lucro_liquido_estimado))) * 100
               : null
             const lucroPositivo = Number(mes.lucro_liquido_estimado) >= 0
