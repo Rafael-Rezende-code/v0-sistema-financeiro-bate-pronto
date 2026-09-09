@@ -51,10 +51,22 @@ export default function RootLayout({
       <body className={`${inter.variable} ${geistMono.variable} font-sans antialiased bg-background`}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="light"
+          defaultTheme="dark"
           enableSystem
           disableTransitionOnChange
         >
+          <div
+            className="gradient-orb -left-40 -top-40 h-[32rem] w-[32rem] bg-[#FF7B00] opacity-[0.15]"
+            aria-hidden="true"
+          />
+          <div
+            className="gradient-orb -right-40 top-1/3 h-[28rem] w-[28rem] bg-amber-500 opacity-[0.12]"
+            aria-hidden="true"
+          />
+          <div
+            className="gradient-orb bottom-[-10rem] left-1/3 h-[26rem] w-[26rem] bg-[#FF7B00] opacity-[0.10]"
+            aria-hidden="true"
+          />
           {children}
           <ServiceWorkerRegistration />
         </ThemeProvider>

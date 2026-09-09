@@ -39,43 +39,49 @@
   --sidebar-ring: oklch(0.65 0.2 45);
   --success: oklch(0.65 0.2 145);
   --success-foreground: oklch(1 0 0);
+  --surface-1: oklch(1 0 0);
+  --surface-2: oklch(0.97 0 0);
+  --surface-3: oklch(0.94 0 0);
 }
 
 .dark {
-  --background: oklch(0.12 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.17 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.17 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.7 0.2 45);
-  --primary-foreground: oklch(0.1 0 0);
-  --secondary: oklch(0.25 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.25 0 0);
+  --background: #0a0a0a;
+  --foreground: #ffffff;
+  --card: #111111;
+  --card-foreground: #ffffff;
+  --popover: #111111;
+  --popover-foreground: #ffffff;
+  --primary: #ff7b00;
+  --primary-foreground: #0a0a0a;
+  --secondary: #181818;
+  --secondary-foreground: #ffffff;
+  --muted: #181818;
   --muted-foreground: oklch(0.65 0 0);
-  --accent: oklch(0.7 0.2 45);
-  --accent-foreground: oklch(0.1 0 0);
+  --accent: #ff7b00;
+  --accent-foreground: #0a0a0a;
   --destructive: oklch(0.5 0.2 27);
   --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.3 0 0);
-  --input: oklch(0.3 0 0);
-  --ring: oklch(0.7 0.2 45);
-  --chart-1: oklch(0.7 0.2 45);
+  --border: oklch(0.3 0 0 / 40%);
+  --input: oklch(0.3 0 0 / 40%);
+  --ring: #ff7b00;
+  --chart-1: #ff7b00;
   --chart-2: oklch(0.75 0.15 150);
   --chart-3: oklch(0.6 0.15 250);
   --chart-4: oklch(0.8 0.15 85);
   --chart-5: oklch(0.65 0.2 340);
-  --sidebar: oklch(0.12 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.7 0.2 45);
-  --sidebar-primary-foreground: oklch(0.1 0 0);
-  --sidebar-accent: oklch(0.22 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.3 0 0);
-  --sidebar-ring: oklch(0.7 0.2 45);
+  --sidebar: #0a0a0a;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #ff7b00;
+  --sidebar-primary-foreground: #0a0a0a;
+  --sidebar-accent: #181818;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: oklch(0.3 0 0 / 40%);
+  --sidebar-ring: #ff7b00;
   --success: oklch(0.7 0.2 145);
   --success-foreground: oklch(0.1 0 0);
+  --surface-1: #111111;
+  --surface-2: #181818;
+  --surface-3: #1f1f1f;
 }
 
 @theme inline {
@@ -119,6 +125,14 @@
   --color-sidebar-ring: var(--sidebar-ring);
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
+  --color-brand-orange: #ff7b00;
+  --color-brand-black: #0a0a0a;
+  --color-brand-white: #ffffff;
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --shadow-glow-orange: 0 0 24px 0 oklch(0.75 0.19 55 / 35%);
+  --shadow-glow-orange-sm: 0 0 12px 0 oklch(0.75 0.19 55 / 25%);
 }
 
 @layer base {
@@ -137,4 +151,30 @@
 
 .safe-area-top {
   padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Redesign Bate Pronto — superficies e glow laranja */
+.surface-1 {
+  background-color: var(--surface-1);
+}
+
+.surface-2 {
+  background-color: var(--surface-2);
+}
+
+.surface-3 {
+  background-color: var(--surface-3);
+}
+
+.card-glow {
+  border: 1px solid oklch(0.75 0.19 55 / 15%);
+  box-shadow: var(--shadow-glow-orange);
+}
+
+.gradient-orb {
+  position: fixed;
+  border-radius: 9999px;
+  filter: blur(120px);
+  pointer-events: none;
+  z-index: -1;
 }

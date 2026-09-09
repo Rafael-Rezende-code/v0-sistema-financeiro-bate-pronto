@@ -8,6 +8,7 @@ interface StatCardProps {
   description?: string
   icon: LucideIcon
   variant?: "default" | "primary" | "highlight"
+  size?: "default" | "hero"
 }
 
 export function StatCard({
@@ -16,18 +17,22 @@ export function StatCard({
   description,
   icon: Icon,
   variant = "default",
+  size = "default",
 }: StatCardProps) {
+  const isHero = size === "hero"
+
   return (
     <Card className={cn(
       "relative overflow-hidden transition-all duration-300 hover:shadow-md",
       variant === "primary" && "bg-primary text-primary-foreground",
       variant === "highlight" && "bg-primary/5 border-primary/20",
+      isHero && "card-glow",
     )}>
       <CardContent className="p-3 md:p-6">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1 space-y-0.5 md:space-y-1">
             <p className={cn(
-              "text-[11px] md:text-sm font-medium truncate",
+              "text-[11px] md:text-sm font-medium uppercase tracking-wide truncate",
               variant === "default" && "text-muted-foreground",
               variant === "primary" && "opacity-80",
               variant === "highlight" && "text-primary",
@@ -35,7 +40,8 @@ export function StatCard({
               {title}
             </p>
             <p className={cn(
-              "text-base md:text-2xl font-bold tracking-tight truncate",
+              "font-bold tracking-tight truncate",
+              isHero ? "text-4xl md:text-5xl font-extrabold" : "text-base md:text-2xl",
               variant === "highlight" && "text-foreground",
             )}>
               {value}

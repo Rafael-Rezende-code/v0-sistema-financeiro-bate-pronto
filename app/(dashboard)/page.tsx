@@ -68,6 +68,7 @@ export default async function DashboardPage() {
           description={`Ticket: ${formatCurrency(stats.avgTicket)}`}
           icon={DollarSign}
           variant="primary"
+          size="hero"
         />
         <StatCard
           title="Lucro"
@@ -75,12 +76,14 @@ export default async function DashboardPage() {
           description={`Margem: ${stats.profitMargin.toFixed(1)}%`}
           icon={TrendingUp}
           variant="highlight"
+          size="hero"
         />
         <StatCard
           title="Saldo em Caixa"
           value={formatCurrency(stats.cashBalance)}
           description="Disponivel"
           icon={Wallet}
+          size="hero"
         />
       </div>
 
